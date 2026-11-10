@@ -1,0 +1,1548 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NIU NIU · Modelo de Exportación</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root{
+    --purple: #674EA7; --purple-dark: #4E3A82; --purple-tint: #F1EDFA;
+    --bg: #FAF9FB; --panel: #FFFFFF; --line: #E4E1EC;
+    --text: #211B2E; --text-dim: #726C81;
+    --green: #2E8B6F; --amber-warn: #B5822A; --red: #B0473D;
+    --th-en: #8F7FBD; --usd-blue: #1D5FD6;
+  }
+  html[data-theme="dark"]{
+    --purple: #9B87D9; --purple-dark: #C4B5E8; --purple-tint: #2C2650;
+    --bg: #17142A; --panel: #221D3B; --line: #3A3260;
+    --text: #EFEAFB; --text-dim: #A79FC9;
+    --green: #4FC79A; --amber-warn: #E0B84C; --red: #E88579;
+    --th-en: #6F5FA0; --usd-blue: #6FA1F5;
+  }
+  *{ box-sizing:border-box; }
+  body{ margin:0; background:var(--bg); color:var(--text); font-family:'Inter', sans-serif; line-height:1.45; transition: background .2s, color .2s; }
+  h1,h2,h3{ font-family:'Fraunces', serif; font-weight:600; }
+  .wrap{ max-width:1220px; margin:0 auto; padding:0 20px 60px; }
+
+  .bi{ display:block; }
+  .bi .es{ display:block; font-weight:600; }
+  .bi .en{ display:block; font-size:0.72em; font-weight:400; font-style:italic; color:var(--text-dim); }
+
+  header{ background: var(--purple); padding: 22px 20px; margin-bottom: 8px; }
+  header .inner{ max-width:1220px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:14px; }
+  header img{ height: 30px; display:block; }
+  header .subtitle{ color:#fff; font-size:13px; text-align:right; }
+  .theme-toggle{
+    background: rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.35); border-radius: 20px;
+    padding: 6px 14px; cursor:pointer; font-size:16px; color:#fff; display:flex; align-items:center; gap:8px;
+  }
+
+  .tabs{ display:flex; gap:6px; margin: 20px 0 16px; flex-wrap:wrap; }
+  .tab{ padding:9px 14px; border-radius:8px 8px 0 0; font-size:12.5px; font-weight:600; color: var(--text-dim); cursor:pointer; border:1px solid transparent; border-bottom:none; background: transparent; }
+  .tab .en{ display:block; font-size:0.72em; font-weight:400; font-style:italic; }
+  .tab.active{ background: var(--panel); color: var(--purple); border-color: var(--line); }
+  .panel{ display:none; } .panel.active{ display:block; }
+
+  .card{ background: var(--panel); border:1px solid var(--line); border-radius: 10px; padding: 20px 22px; margin-bottom: 18px; }
+  .card h2{ font-size:18px; margin: 0 0 2px; color: var(--purple); }
+  .card h2 .en{ font-size:0.55em; color:var(--text-dim); font-style:italic; font-weight:400; }
+  .card-head{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:2px; }
+  .btn-dl{ background:var(--purple-tint); color:var(--purple-dark); border:1px solid var(--purple); border-radius:7px; padding:7px 13px; font-size:12px; font-weight:600; cursor:pointer; font-family:'Inter'; white-space:nowrap; }
+  .btn-dl:hover{ background:var(--purple); color:#fff; }
+  .card .desc{ font-size:12px; color: var(--text-dim); margin: 0 0 16px; font-style: italic; }
+
+  label{ display:block; font-size:12px; color:var(--text); margin-bottom:5px; }
+  label .en{ display:block; font-size:0.78em; color:var(--text-dim); font-style:italic; font-weight:400; }
+  input[type=number], input[type=text], select{
+    width:100%; background:var(--panel); border:1px solid var(--line); color:var(--text);
+    padding:8px 9px; border-radius:6px; font-size:13.5px; font-family:'Inter';
+  }
+  input:focus, select:focus{ outline:2px solid var(--purple); outline-offset:1px; }
+  .field{ margin-bottom:12px; }
+  .row2{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .row3{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; }
+  .row4{ display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:14px; }
+  @media (max-width:760px){ .row3,.row4{ grid-template-columns:1fr 1fr; } }
+
+  table{ width:100%; border-collapse: collapse; font-size:12.5px; }
+  th{ background: var(--purple-tint); color: var(--purple-dark); font-weight:600; font-size:11px; text-align:left; padding:8px 8px; border-bottom:2px solid var(--purple); vertical-align:top; }
+  th .en{ color: var(--th-en); }
+  td{ padding:7px 8px; border-bottom:1px solid var(--line); }
+  tr.section-row td{ background: var(--purple-tint); font-weight:700; color:var(--purple-dark); font-size:11.5px; }
+  tr.total-row td{ background: var(--purple); color:#fff; font-weight:700; }
+  tr.margin-row td{ background: var(--purple-dark); color:#fff; font-weight:700; }
+  .input-cell input, .input-cell select{ padding:5px 7px; font-size:12.5px; }
+  .dim{ color: var(--text-dim); font-size:11.5px; }
+  .num{ text-align:right; font-family:'IBM Plex Mono', monospace; }
+  .usd-color{ color: var(--usd-blue); }
+  .mxn-color{ color: var(--text); }
+  table.small-table td, table.small-table th{ white-space:nowrap; }
+  .scroll-x{ overflow-x:auto; }
+
+  .fx-box{ display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+  .fx-value{ font-family:'Fraunces', serif; font-size:30px; color:var(--purple); font-weight:600; }
+  .btn{ background: var(--purple); color:#fff; border:none; padding:9px 16px; border-radius:7px; font-weight:600; font-size:13px; cursor:pointer; font-family:'Inter'; }
+  .btn:hover{ background: var(--purple-dark); }
+  .btn.small{ padding:6px 12px; font-size:12px; }
+  .btn.ghost{ background:transparent; color:var(--purple); border:1.5px solid var(--purple); }
+  .status{ font-size:12px; margin-top:6px; }
+  .status.ok{ color: var(--green); } .status.warn{ color: var(--amber-warn); } .status.err{ color: var(--red); }
+
+  .badge{ display:inline-block; font-size:10.5px; font-weight:700; padding:3px 9px; border-radius:20px; }
+  .badge-fixed{ background:var(--purple-tint); color:var(--purple-dark); }
+
+  .margin-flag{ font-size: 22px; margin-right:6px; vertical-align:middle; }
+  .margin-pct{ font-family:'Fraunces', serif; font-size: 26px; font-weight:700; }
+  .legend-box{ display:flex; flex-direction:column; gap:6px; margin-top:12px; font-size:12px; }
+  .legend-item{ display:flex; align-items:center; gap:8px; }
+
+  .foot-note{ font-size:11.5px; color:var(--text-dim); margin-top: 10px; line-height:1.6; }
+  .foot-note b{ color: var(--text); }
+  .foot-note .en-line{ display:block; font-style:italic; color:var(--text-dim); opacity:0.85; font-size:0.94em; margin-top:2px; }
+
+  /* --- Bitacora: tarjetas de 2-3 lineas en vez de tabla apretada --- */
+  .bitacora-card{ border:1px solid var(--line); border-radius:9px; padding:14px 16px; margin-bottom:14px; background:var(--panel); }
+  .bitacora-card-top{ display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; gap:10px; }
+  .bitacora-card-top .left{ display:flex; align-items:center; gap:10px; }
+  .bitacora-card-top input[type=checkbox]{ width:18px; height:18px; accent-color:var(--purple); }
+  .bitacora-line-label{ font-size:11.5px; font-weight:700; color:var(--purple); text-transform:uppercase; letter-spacing:0.4px; }
+  .btn-del{ background:transparent; border:1.5px solid var(--red); color:var(--red); border-radius:6px; padding:4px 10px; font-size:12px; cursor:pointer; font-family:'Inter'; }
+  .btn-del:hover{ background: var(--red); color:#fff; }
+  .bitacora-grid{ display:grid; grid-template-columns: repeat(4, 1fr); gap:10px; margin-bottom:10px; }
+  .bitacora-grid.cols3{ grid-template-columns: repeat(3, 1fr); }
+  @media (max-width:820px){ .bitacora-grid{ grid-template-columns: 1fr 1fr; } }
+  .bitacora-grid .f label{ font-size:10.5px; margin-bottom:3px; }
+  .bitacora-summary{
+    display:grid; grid-template-columns: repeat(4, 1fr); gap:8px; background:var(--purple-tint);
+    border-radius:7px; padding:9px 12px; font-size:12px;
+  }
+  @media (max-width:820px){ .bitacora-summary{ grid-template-columns: 1fr 1fr; } }
+  .bitacora-summary .item .lbl{ font-size:10px; color:var(--text-dim); display:block; }
+  .bitacora-summary .item .val{ font-family:'IBM Plex Mono', monospace; font-weight:600; color:var(--purple-dark); }
+  .bitacora-totals-card{ background:var(--purple-tint); border:none; }  .addr-wrap{ position:relative; }
+  .addr-suggestions{
+    position:absolute; z-index:20; top:100%; left:0; right:0; background:var(--panel);
+    border:1px solid var(--line); border-top:none; border-radius:0 0 8px 8px; max-height:220px;
+    overflow-y:auto; box-shadow:0 6px 16px rgba(0,0,0,0.12);
+  }
+  .addr-suggestion-item{ padding:8px 10px; font-size:12.5px; cursor:pointer; border-bottom:1px solid var(--line); }
+  .addr-suggestion-item:hover{ background:var(--purple-tint); }
+  .addr-guide{ font-size:10.5px; color:var(--text-dim); margin-top:4px; line-height:1.4; }
+  .refinery-chip{ display:inline-block; font-size:11.5px; padding:5px 11px; border-radius:20px; border:1px solid var(--purple); color:var(--purple); background:var(--purple-tint); cursor:pointer; margin:4px 6px 0 0; }
+  .refinery-chip:hover{ background:var(--purple); color:#fff; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="inner">
+    <img id="logoImg" src="data:image/png;base64,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" alt="NIU NIU">
+    <div style="display:flex; align-items:center; gap:16px;">
+      <div class="subtitle bi"><span class="es" style="font-weight:700;">Modelo de Exportación</span><span class="en" style="color:#DCD3F0;">Export Model · agosto 2026</span></div>
+      <button class="theme-toggle" onclick="toggleTheme()"><span id="themeIcon">🌙</span><span id="themeLabel">Oscuro</span></button>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="tabs">
+    <div class="tab active" data-tab="fx"><span class="es">Tipo de Cambio</span><span class="en">Exchange Rate</span></div>
+    <div class="tab" data-tab="precios"><span class="es">Precios</span><span class="en">Prices</span></div>
+    <div class="tab" data-tab="catalogo"><span class="es">Catálogo</span><span class="en">Catalog</span></div>
+    <div class="tab" data-tab="bitacora"><span class="es">Bitácora</span><span class="en">Purchase Log</span></div>
+    <div class="tab" data-tab="export"><span class="es">Análisis de Exportación</span><span class="en">Export Analysis</span></div>
+    <div class="tab" data-tab="distancia"><span class="es">Costeo por Distancia</span><span class="en">Distance Costing</span></div>
+    <div class="tab" data-tab="acopio"><span class="es">Acopio Temporal</span><span class="en">Temporary Storage</span></div>
+    <div class="tab" data-tab="compra"><span class="es">Compra</span><span class="en">Purchase model</span></div>
+    <div class="tab" data-tab="venta"><span class="es">Venta</span><span class="en">Sale model</span></div>
+  </div>
+
+  <!-- TAB: FX -->
+  <div class="panel active" id="tab-fx">
+    <div class="card">
+      <div class="card-head"><h2><span class="es">Tipo de Cambio</span> <span class="en">Exchange Rate</span></h2>
+      <button class="btn-dl" onclick="exportFX()">⬇ Descargar Excel / Download Excel</button></div>
+      <p class="desc">MXN/USD — fuente: Banco de México (Banxico), serie SF43718 (FIX)</p>
+      <div class="fx-box">
+        <div><div class="fx-value" id="fxDisplay">$16.90</div><div class="dim">pesos por dólar · pesos per dollar</div></div>
+        <button class="btn" onclick="fetchBanxico()">Actualizar desde Banxico / Refresh from Banxico</button>
+      </div>
+      <div class="status" id="fxStatus"></div>
+      <div class="field" style="max-width:220px; margin-top:16px;">
+        <label class="bi"><span class="es">Sobrescribir manualmente</span><span class="en">Manual override</span></label>
+        <input type="number" id="fxManual" step="0.0001" value="16.90" onchange="setFxManual()">
+      </div>
+      <div class="foot-note">La API del SIE de Banxico requiere un token personal y puede estar bloqueada por el sandbox de este documento. Si no conecta, actualiza el valor manualmente.
+        <span class="en-line">Banxico's API needs a personal token and may be blocked by this document's sandbox. Update manually if it can't connect.</span></div>
+    </div>
+  </div>
+
+  <!-- TAB: PRECIOS -->
+  <div class="panel" id="tab-precios">
+    <div class="card">
+      <div class="card-head"><h2><span class="es">Precios de Compra y Venta</span> <span class="en">Purchase &amp; Sale Prices</span></h2>
+      <button class="btn-dl" onclick="exportPrecios()">⬇ Descargar Excel / Download Excel</button></div>
+      <p class="desc">Tarifario general — independiente del Análisis de Exportación y de la Bitácora.</p>
+      <div class="scroll-x"><table>
+        <thead><tr>
+          <th><span class="bi"><span class="es">Química</span><span class="en">Chemistry</span></span></th>
+          <th><span class="bi"><span class="es">Tipo</span><span class="en">Type</span></span></th>
+          <th><span class="bi"><span class="es">Compra MXN/kg</span><span class="en">Purchase MXN/kg</span></span></th>
+          <th><span class="bi"><span class="es">Compra USD/kg</span><span class="en">Purchase USD/kg</span></span></th>
+          <th><span class="bi"><span class="es">Venta MXN/kg</span><span class="en">Sale MXN/kg</span></span></th>
+          <th><span class="bi"><span class="es">Venta USD/kg</span><span class="en">Sale USD/kg</span></span></th>
+        </tr></thead>
+        <tbody id="pricingBody"></tbody>
+      </table></div>
+      <div class="foot-note">Los campos sin monto quedan en $0.00 y son totalmente editables para cuando se definan.
+        <span class="en-line">Fields with no amount default to $0.00 and are fully editable once defined.</span></div>
+    </div>
+  </div>
+
+  <!-- TAB: CATALOGO -->
+  <div class="panel" id="tab-catalogo">
+    <div class="card">
+      <div class="card-head"><h2><span class="es">Catálogo de Materiales</span> <span class="en">Materials Catalog</span></h2>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button class="btn-dl" onclick="exportCatalogo()">⬇ Descargar Excel / Download Excel</button>
+        <button class="btn-dl" onclick="downloadTemplateCatalogo()">📄 Plantilla / Template</button>
+        <button class="btn-dl" onclick="document.getElementById('fileCatalogo').click()">⬆ Carga masiva / Bulk upload</button>
+        <input type="file" id="fileCatalogo" accept=".xlsx,.xls" style="display:none;" onchange="uploadCatalogo(event)">
+      </div></div>
+      <p class="desc">Baterías + equipos electrónicos. Catálogo abierto: puedes agregar más categorías, o bajar la plantilla, llenarla y subirla de golpe.</p>
+      <div class="status" id="catalogoUploadStatus"></div>
+      <div class="scroll-x"><table>
+        <thead><tr>
+          <th><span class="bi"><span class="es">Categoría</span><span class="en">Category</span></span></th>
+          <th><span class="bi"><span class="es">Tipo</span><span class="en">Type</span></span></th>
+          <th><span class="bi"><span class="es">Compra MXN/kg</span><span class="en">Purchase MXN/kg</span></span></th>
+          <th><span class="bi"><span class="es">Compra USD/kg</span><span class="en">Purchase USD/kg</span></span></th>
+          <th><span class="bi"><span class="es">Venta MXN/kg</span><span class="en">Sale MXN/kg</span></span></th>
+          <th><span class="bi"><span class="es">Venta USD/kg</span><span class="en">Sale USD/kg</span></span></th>
+          <th></th>
+        </tr></thead>
+        <tbody id="catalogoBody"></tbody>
+      </table></div>
+      <button class="btn small" style="margin-top:12px;" onclick="addCatalogRow()">+ Agregar categoría / Add category</button>
+      <div class="foot-note">Este catálogo alimenta el menú de materiales de la Bitácora.
+        <span class="en-line">This catalog feeds the material dropdown in the Purchase Log.</span></div>
+    </div>
+  </div>
+
+  <!-- TAB: BITACORA -->
+  <div class="panel" id="tab-bitacora">
+    <div class="card">
+      <div class="card-head"><h2><span class="es">Bitácora de Compra de E-waste</span> <span class="en">E-waste Purchase Log</span></h2>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button class="btn-dl" onclick="exportBitacora()">⬇ Descargar Excel / Download Excel</button>
+        <button class="btn-dl" onclick="downloadTemplateBitacora()">📄 Plantilla / Template</button>
+        <button class="btn-dl" onclick="document.getElementById('fileBitacora').click()">⬆ Carga masiva / Bulk upload</button>
+        <input type="file" id="fileBitacora" accept=".xlsx,.xls" style="display:none;" onchange="uploadBitacora(event)">
+      </div></div>
+      <p class="desc">Una compra puede tener varios materiales (mismo Folio en varias tarjetas). Baja la plantilla, llénala y súbela para cargar muchas líneas de golpe.</p>
+      <div class="status" id="bitacoraUploadStatus"></div>
+
+      <div class="card" style="background:var(--purple-tint); border:none; padding:14px 16px; margin-bottom:16px;">
+        <div class="bi" style="margin-bottom:8px;"><span class="es" style="font-weight:700; color:var(--purple-dark);">Modo de captura</span><span class="en">Entry mode</span></div>
+        <div style="display:flex; gap:18px; flex-wrap:wrap;">
+          <label style="display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="radio" name="bitModo" value="multi" checked onchange="setBitacoraMode('multi')" style="width:16px;height:16px;accent-color:var(--purple);"> <span class="bi"><span class="es" style="font-weight:600;">Multiempresa</span><span class="en">Multi-company (each line its own header)</span></span></label>
+          <label style="display:flex; align-items:center; gap:6px; cursor:pointer;"><input type="radio" name="bitModo" value="individual" onchange="setBitacoraMode('individual')" style="width:16px;height:16px;accent-color:var(--purple);"> <span class="bi"><span class="es" style="font-weight:600;">Individual (una empresa)</span><span class="en">Single company (one shared header)</span></span></label>
+        </div>
+      </div>
+
+      <!-- header compartido, solo visible en modo Individual -->
+      <div class="card" id="individualHeaderCard" style="display:none;">
+        <div class="bi" style="margin-bottom:10px;"><span class="es" style="font-weight:700; color:var(--purple);">Datos de la compra</span><span class="en">Purchase details</span></div>
+        <div class="bitacora-grid">
+          <div class="f field"><label class="bi"><span class="es">Fecha</span><span class="en">Date</span></label>
+            <input type="text" id="indFecha" onchange="setIndividualHeader('fecha', this.value)"></div>
+          <div class="f field"><label class="bi"><span class="es">Empresa</span><span class="en">Company</span></label>
+            <input type="text" id="indEmpresa" onchange="setIndividualHeader('empresa', this.value)"></div>
+          <div class="f field"><label class="bi"><span class="es">Transporte</span><span class="en">Transport</span></label>
+            <input type="text" id="indTransporte" onchange="setIndividualHeader('transporte', this.value)"></div>
+          <div class="f field"><label class="bi"><span class="es">Centro de Acopio</span><span class="en">Collection Center</span></label>
+            <input type="text" id="indAcopio" onchange="setIndividualHeader('acopio', this.value)"></div>
+        </div>
+        <div class="field" style="max-width:260px;"><label class="bi"><span class="es">Folio</span><span class="en">Reference #</span></label>
+          <input type="text" id="indFolio" onchange="setIndividualHeader('folio', this.value)"></div>
+      </div>
+
+      <div id="bitacoraCards"></div>
+
+      <div class="card bitacora-totals-card" style="margin-top:4px;">
+        <div class="dim bi" style="margin-bottom:8px;"><span class="es" style="font-weight:700; color:var(--purple-dark);">Totales (solo líneas marcadas)</span><span class="en">Totals (only checked lines)</span></div>
+        <div class="bitacora-summary" style="grid-template-columns: repeat(3,1fr);">
+          <div class="item"><span class="lbl">Peso / Weight</span><span class="val" id="totKg">0 kg</span></div>
+          <div class="item"><span class="lbl">Total Compra / Total Purchase</span><span class="val" id="totCompraMXN">$0.00 · US$0.00</span></div>
+          <div class="item"><span class="lbl">Total Venta / Total Sale</span><span class="val" id="totVentaMXN">$0.00 · US$0.00</span></div>
+        </div>
+        <div class="dim bi" style="margin:14px 0 8px;"><span class="es" style="font-weight:700; color:var(--purple-dark);">Métrica de transporte (de la pestaña Costeo por Distancia)</span><span class="en">Transport metric (from Distance Costing tab)</span></div>
+        <div class="bitacora-summary" style="grid-template-columns: repeat(4,1fr);">
+          <div class="item"><span class="lbl">$/kg MXN</span><span class="val" id="bitKgMXN">$0.00</span></div>
+          <div class="item"><span class="lbl">$/kg USD</span><span class="val" id="bitKgUSD">US$0.00</span></div>
+          <div class="item"><span class="lbl">$/(kg·km) MXN</span><span class="val" id="bitKgKmMXN">$0.0000</span></div>
+          <div class="item"><span class="lbl">$/(kg·km) USD</span><span class="val usd-color" id="bitKgKmUSD">US$0.0000</span></div>
+        </div>
+        <div class="foot-note" style="margin-top:8px;">Usa el peso total marcado aquí junto con el monto de transporte y los km ajustados capturados en "Costeo por Distancia".
+          <span class="en-line">Uses the checked total weight here together with the transport amount and adjusted km entered in "Distance Costing".</span></div>
+      </div>
+
+      <div style="display:flex; gap:10px; margin-top:14px; flex-wrap:wrap;">
+        <button class="btn small ghost" onclick="addBitacoraRow()">+ Agregar línea / Add line</button>
+        <button class="btn small" onclick="enviarAExportacion()">Enviar seleccionados a Exportación → / Send selected to Export →</button>
+      </div>
+      <div class="status" id="bitacoraStatus"></div>
+      <div class="foot-note">Marca "Incl." en las filas del próximo embarque y da clic en enviar — pasa el kg y el costo de Compra directo a la pestaña de Exportación.
+        <span class="en-line">Check "Incl." on the rows for the next shipment and click send — it pushes kg and Purchase cost straight into the Export tab.</span></div>
+    </div>
+  </div>
+
+  <!-- TAB: EXPORT ANALYSIS -->
+  <div class="panel" id="tab-export">
+    <div class="card">
+      <div class="card-head"><h2><span class="es">Análisis de Exportación</span> <span class="en">Export Analysis</span></h2>
+      <button class="btn-dl" onclick="exportExportAnalysis()">⬇ Descargar Excel / Download Excel</button></div>
+      <p class="desc">Embarque de referencia: agosto 2026 · Reference shipment: August 2026</p>
+      <div class="row3">
+        <div class="field"><label class="bi"><span class="es">Peso de batería embarcado (kg)</span><span class="en">Battery weight shipped (kg)</span></label><input type="number" id="kgEmbarque" value="18555" onchange="calcExport()"></div>
+        <div class="field"><label class="bi"><span class="es">Empaque adicional (kg)</span><span class="en">Additional packaging (kg)</span></label><input type="number" id="kgEmpaque" value="500" onchange="calcExport()"></div>
+        <div class="field"><label class="bi"><span class="es">Peso total embarcado</span><span class="en">Total weight shipped</span></label><input type="text" id="kgTotal" value="" readonly style="background:var(--purple-tint);"></div>
+      </div>
+      <div class="dim" style="margin-bottom:10px;">Rango programado: 18,500–19,500 kg · Tope máximo: 20,000 kg <span id="capStatus"></span></div>
+
+      <div class="scroll-x"><table>
+        <thead><tr>
+          <th><span class="bi"><span class="es">Concepto</span><span class="en">Item</span></span></th>
+          <th><span class="bi"><span class="es">Monto MXN</span><span class="en">Amount MXN</span></span></th>
+          <th><span class="bi"><span class="es">Monto USD</span><span class="en">Amount USD</span></span></th>
+          <th><span class="bi"><span class="es">Base (kg)</span><span class="en">Base (kg)</span></span></th>
+          <th><span class="bi"><span class="es">$/kg MXN</span><span class="en">$/kg MXN</span></span></th>
+          <th><span class="bi"><span class="es">$/kg USD</span><span class="en">$/kg USD</span></span></th>
+        </tr></thead>
+        <tbody id="exportBody"></tbody>
+      </table></div>
+
+      <div class="card" style="margin-top:16px; background:var(--purple-tint); border:none;">
+        <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+          <div><span class="margin-flag" id="marginFlag">🟡</span></div>
+          <div>
+            <div class="dim bi"><span class="es" style="font-weight:600;">Margen sobre Venta</span><span class="en">Margin over Sale</span></div>
+            <div class="margin-pct" id="marginPct" style="color:var(--amber-warn);">0.0%</div>
+          </div>
+        </div>
+        <div class="legend-box">
+          <div class="legend-item">🟢 <span>≥ 40% — <span class="bi" style="display:inline"><span class="es" style="display:inline;font-weight:400;">operación muy rentable</span></span> <span class="dim">/ highly profitable</span></span></div>
+          <div class="legend-item">🟡 <span>0% – 39.99% — rentable pero ajustado <span class="dim">/ profitable but tight</span></span></div>
+          <div class="legend-item">🔴 <span>Negativo — pierde dinero <span class="dim">/ loses money</span></span></div>
+        </div>
+      </div>
+
+      <div class="foot-note" style="margin-top:14px;"><span class="badge badge-fixed">FIJO POR EMBARQUE</span> los conceptos logísticos (incl. "Otros") no cambian con el peso. Compra y Venta son editables.
+        <span class="en-line">Logistics items (incl. "Other") are fixed per shipment. Purchase and Sale price are editable.</span></div>
+    </div>
+  </div>
+
+  <!-- TAB: COSTEO POR DISTANCIA -->
+  <div class="panel" id="tab-distancia">
+    <div class="card">
+      <div class="card-head"><h2><span class="es">Costeo por Distancia</span> <span class="en">Distance-based Costing</span></h2>
+      <button class="btn-dl" onclick="exportDistancia()">⬇ Descargar Excel / Download Excel</button></div>
+      <p class="desc">Modelo independiente — no se combina con los gastos logísticos fijos de Exportación.</p>
+
+      <div class="row2">
+        <div class="field">
+          <label class="bi"><span class="es">Lugar de salida</span><span class="en">Origin</span></label>
+          <div class="addr-wrap">
+            <input type="text" id="origenTxt" value="CDMX" autocomplete="off" oninput="buscarSugerencias('origenTxt','origenSug')">
+            <div class="addr-suggestions" id="origenSug" style="display:none;"></div>
+          </div>
+          <div class="addr-guide">Escribe: Calle y número, Colonia, Municipio/Alcaldía, Estado <br>Ej: Av. Insurgentes Sur 1200, Del Valle, Benito Juárez, CDMX
+            <span class="en-line">Write: Street and number, Neighborhood, Municipality, State</span></div>
+        </div>
+        <div class="field">
+          <label class="bi"><span class="es">Lugar de llegada</span><span class="en">Destination</span></label>
+          <div class="addr-wrap">
+            <input type="text" id="destinoTxt" value="Nuevo Laredo, Tamps." autocomplete="off" oninput="buscarSugerencias('destinoTxt','destinoSug')">
+            <div class="addr-suggestions" id="destinoSug" style="display:none;"></div>
+          </div>
+          <div class="addr-guide">Escribe: Calle y número, Colonia, Municipio/Alcaldía, Estado <br>Ej: Blvd. Colosio 500, Industrial, Nuevo Laredo, Tamaulipas
+            <span class="en-line">Write: Street and number, Neighborhood, Municipality, State</span></div>
+          <div style="margin-top:8px;">
+            <span class="dim" style="font-size:11px;">Refinerías conocidas / Known refineries:</span><br>
+            <span class="refinery-chip" onclick="document.getElementById('destinoTxt').value='1201 Battery Blvd, McCarran, NV 89434, USA (Redwood Materials)'; document.getElementById('destinoSug').style.display='none';">Redwood Materials (NV, USA)</span>
+            <span class="refinery-chip" onclick="document.getElementById('destinoTxt').value='Eastman Business Park, Rochester, NY, USA (Li-Cycle)'; document.getElementById('destinoSug').style.display='none';">Li-Cycle (NY, USA)</span>
+            <span class="refinery-chip" onclick="document.getElementById('destinoTxt').value='Ecolimpio, Ramos Arizpe, Coahuila, México'; document.getElementById('destinoSug').style.display='none';">Ecolimpio (Ramos Arizpe, Coah.)</span>
+            <span class="refinery-chip" onclick="document.getElementById('destinoTxt').value='Tiffany Towers, Jumeirah Lake Towers, Dubai, United Arab Emirates (Metaluck / MCC)'; document.getElementById('destinoSug').style.display='none';">Metaluck / MCC (Dubai, EAU)</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="field" style="max-width:460px; background:var(--purple-tint); padding:14px; border-radius:8px;">
+        <label class="bi"><span class="es" style="font-weight:700;">Opción gratuita — sin API key (OpenStreetMap)</span><span class="en">Free option — no API key (OpenStreetMap)</span></label>
+        <button class="btn small" style="margin-top:6px;" onclick="calcularDistanciaOSM()">🌍 Calcular km gratis / Calculate km free</button>
+        <div class="status" id="osmStatus"></div>
+        <div class="foot-note" style="margin-top:6px;">Usa Nominatim + OSRM (servidores públicos de la comunidad OpenStreetMap). No necesita key ni facturación, pero es un servicio comunitario sin garantía de disponibilidad — para uso ligero está bien.
+          <span class="en-line">Uses Nominatim + OSRM (public OpenStreetMap community servers). No key or billing needed, but it's a community service with no uptime guarantee — fine for light use.</span></div>
+      </div>
+
+      <div class="field" style="max-width:420px; margin-top:14px;">
+        <label class="bi"><span class="es">Google Maps API key (opcional, solo en memoria)</span><span class="en">Google Maps API key (optional, memory only)</span></label>
+        <input type="text" id="gmapsKey" placeholder="Pega tu API key aquí para intentar autocalcular">
+        <button class="btn small ghost" style="margin-top:8px;" onclick="calcularDistanciaGoogle()">Calcular km con Google Maps / Calculate km with Google Maps</button>
+        <div class="status" id="gmapsStatus"></div>
+      </div>
+
+      <div class="row3" style="margin-top:14px;">
+        <div class="field"><label class="bi"><span class="es">Kilómetros</span><span class="en">Kilometers</span></label><input type="number" id="kmManual" value="0" onchange="calcDistancia()"></div>
+        <div class="field">
+          <label class="bi"><span class="es">Adicional por distancia</span><span class="en">Distance surcharge</span></label>
+          <select id="aplicar15" onchange="calcDistancia()">
+            <option value="0">0%</option>
+            <option value="5">5%</option>
+            <option value="10">10%</option>
+            <option value="15">15%</option>
+            <option value="20">20%</option>
+            <option value="30">30%</option>
+          </select>
+        </div>
+        <div class="field"><label class="bi"><span class="es">Km ajustados</span><span class="en">Adjusted km</span></label><input type="text" id="kmAjustados" readonly style="background:var(--purple-tint);"></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label class="bi"><span class="es">Peso (kg)</span><span class="en">Weight (kg)</span></label><input type="number" id="pesoDist" value="0" onchange="calcDistancia()"></div>
+        <div class="field"><label class="bi"><span class="es">Monto total de transporte (MXN)</span><span class="en">Total transport amount (MXN)</span></label><input type="number" id="montoDist" value="0" onchange="calcDistancia()"></div>
+      </div>
+
+      <table>
+        <tbody>
+          <tr><td><span class="bi"><span class="es">$/kg MXN</span></span></td><td class="num" id="distKgMXN">$0.00</td></tr>
+          <tr><td><span class="bi"><span class="es">$/kg USD</span></span></td><td class="num usd-color" id="distKgUSD">US$0.00</td></tr>
+          <tr><td><span class="bi"><span class="es">$/(kg·km) MXN</span></span></td><td class="num" id="distKgKmMXN">$0.0000</td></tr>
+          <tr><td><span class="bi"><span class="es">$/(kg·km) USD</span></span></td><td class="num usd-color" id="distKgKmUSD">US$0.0000</td></tr>
+        </tbody>
+      </table>
+      <div class="foot-note">Ejemplo: $50/kg de transporte ÷ 10 km = $5.00/(kg·km). Es una métrica para comparar rutas, no reemplaza los gastos fijos de Exportación.
+        <span class="en-line">Example: $50/kg transport cost ÷ 10 km = $5.00/(kg·km). A metric to compare routes, not a replacement for Export's fixed costs.</span></div>
+    </div>
+  </div>
+
+  <!-- TAB: ACOPIO TEMPORAL -->
+  <div class="panel" id="tab-acopio">
+    <div class="card">
+      <div class="card-head"><h2><span class="es">Acopio Temporal</span> <span class="en">Temporary Storage</span></h2>
+      <button class="btn-dl" onclick="exportAcopio()">⬇ Descargar Excel / Download Excel</button></div>
+      <p class="desc">Aplica a los kg que exceden el embarque programado (19,500 kg)</p>
+      <div class="row3">
+        <div class="field"><label class="bi"><span class="es">Tarifa (MXN/kg/mes nominal)</span><span class="en">Rate (MXN/kg/nominal month)</span></label><input type="number" id="tarifaAcopio" value="1.20" step="0.01" onchange="calcAcopio()"></div>
+        <div class="field"><label class="bi"><span class="es">Kg excedentes en acopio</span><span class="en">Excess kg in storage</span></label><input type="number" id="kgExcedente" value="0" onchange="calcAcopio()"></div>
+        <div class="field"><label class="bi"><span class="es">Meses facturables (nominal)</span><span class="en">Billable months</span></label><input type="number" id="mesesAcopio" value="1" min="0" step="1" onchange="calcAcopio()"></div>
+      </div>
+      <table><tbody>
+        <tr><td><span class="bi"><span class="es">Costo de acopio temporal (MXN)</span></span></td><td class="num" id="acopioMXN">$0.00</td></tr>
+        <tr><td><span class="bi"><span class="es">Costo de acopio temporal (USD)</span></span></td><td class="num usd-color" id="acopioUSD">US$0.00</td></tr>
+      </tbody></table>
+      <div class="foot-note">Se cobra el mes completo aunque se use 1 o 30 días. <span class="en-line">Full month is billed even if used for only 1 day.</span></div>
+    </div>
+  </div>
+
+  <!-- TAB: COMPRA -->
+  <div class="panel" id="tab-compra">
+    <div class="card">
+      <div class="card-head"><h2><span class="es">Compra</span> <span class="en">Purchase model</span></h2>
+      <button class="btn-dl" onclick="exportCompra()">⬇ Descargar Excel / Download Excel</button></div>
+      <p class="desc">Costo por conseguir el material + gastos, contra el precio de disposición final, para calcular el margen.</p>
+
+      <div class="dim bi" style="margin-bottom:6px;"><span class="es" style="font-weight:700;">Materiales (hasta 5 líneas)</span><span class="en">Materials (up to 5 lines)</span></div>
+      <div class="scroll-x"><table>
+        <thead><tr>
+          <th><span class="bi"><span class="es">Material</span><span class="en">Material</span></span></th>
+          <th><span class="bi"><span class="es">Costo MXN/kg</span><span class="en">Cost MXN/kg</span></span></th>
+          <th><span class="bi"><span class="es">Cantidad (kg)</span><span class="en">Quantity (kg)</span></span></th>
+          <th><span class="bi"><span class="es">Total MXN</span><span class="en">Total MXN</span></span></th>
+          <th><span class="bi"><span class="es">Total USD</span><span class="en">Total USD</span></span></th>
+        </tr></thead>
+        <tbody id="compraMaterialesBody"></tbody>
+        <tfoot><tr class="total-row" id="compraMaterialesTotal"></tr></tfoot>
+      </table></div>
+
+      <div class="row3" style="margin-top:16px;">
+        <div class="field"><label class="bi"><span class="es">Gastos logísticos (MXN)</span><span class="en">Logistics costs (MXN)</span></label><input type="number" id="compraLogistica" value="0" onchange="calcCompra()"></div>
+        <div class="field"><label class="bi"><span class="es">Gastos operativos (MXN)</span><span class="en">Operating costs (MXN)</span></label><input type="number" id="compraOperativos" value="0" onchange="calcCompra()"></div>
+        <div class="field"><label class="bi"><span class="es">Gastos administrativos (MXN)</span><span class="en">Administrative costs (MXN)</span></label><input type="number" id="compraAdmin" value="0" onchange="calcCompra()"></div>
+      </div>
+
+      <table><tbody>
+        <tr class="total-row"><td>Subtotal de costos / Cost subtotal</td><td class="num" id="compraSubtotalMXN">$0.00</td><td class="num usd-color" id="compraSubtotalUSD">US$0.00</td></tr>
+      </tbody></table>
+
+      <div class="row2" style="margin-top:16px;">
+        <div class="field"><label class="bi"><span class="es">Precio de disposición final (MXN/kg)</span><span class="en">Final disposal price (MXN/kg)</span></label><input type="number" id="compraDisposicion" value="0" onchange="calcCompra()"></div>
+        <div class="field"><label class="bi"><span class="es">% de ganancia (sobre disposición final)</span><span class="en">Profit % (over final disposal price)</span></label>
+          <select id="compraPct" onchange="calcCompra()">
+            <option value="10">10%</option><option value="15">15%</option><option value="20">20%</option><option value="25">25%</option>
+            <option value="30" selected>30%</option><option value="35">35%</option><option value="40">40%</option><option value="45">45%</option><option value="50">50%</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="scroll-x"><table>
+        <thead><tr>
+          <th><span class="bi"><span class="es">Concepto</span><span class="en">Item</span></span></th>
+          <th><span class="bi"><span class="es">MXN</span></span></th>
+          <th><span class="bi"><span class="es">USD</span></span></th>
+        </tr></thead>
+        <tbody id="compraMargenBody"></tbody>
+      </table></div>
+
+      <div class="card" style="margin-top:16px; background:var(--purple-tint); border:none;">
+        <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+          <div><span class="margin-flag" id="compraMarginFlag">🟡</span></div>
+          <div>
+            <div class="dim bi"><span class="es" style="font-weight:600;">Margen real sobre disposición final</span><span class="en">Real margin over disposal price</span></div>
+            <div class="margin-pct" id="compraMarginPct" style="color:var(--amber-warn);">0.0%</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="dim bi" style="margin:18px 0 6px;"><span class="es" style="font-weight:700;">Punto de equilibrio</span><span class="en">Break-even point</span></div>
+      <div id="compraChart"></div>
+      <div class="foot-note">La línea plana es el Subtotal de costos; la línea que sube es el Total (disposición final + ganancia) en cada % posible. El punto marcado es el % que elegiste arriba.
+        <span class="en-line">The flat line is the cost subtotal; the rising line is the Total (disposal price + profit) at each possible %. The marked point is the % you selected above.</span></div>
+    </div>
+  </div>
+
+  <!-- TAB: VENTA -->
+  <div class="panel" id="tab-venta">
+    <div class="card">
+      <div class="card-head"><h2><span class="es">Venta</span> <span class="en">Sale model</span></h2>
+      <button class="btn-dl" onclick="exportVenta()">⬇ Descargar Excel / Download Excel</button></div>
+      <p class="desc">El mismo proceso que Compra, pero al revés: parte de lo que te pagan por material (venta), suma tu ganancia, resta tus gastos, y te dice cuánto puedes pagar por kg al comprar.</p>
+
+      <div class="dim bi" style="margin-bottom:6px;"><span class="es" style="font-weight:700;">Materiales (hasta 5 líneas)</span><span class="en">Materials (up to 5 lines)</span></div>
+      <div class="scroll-x"><table>
+        <thead><tr>
+          <th><span class="bi"><span class="es">Material</span><span class="en">Material</span></span></th>
+          <th><span class="bi"><span class="es">Venta $/kg</span><span class="en">Sale $/kg</span></span></th>
+          <th><span class="bi"><span class="es">Cantidad (kg)</span><span class="en">Quantity (kg)</span></span></th>
+          <th><span class="bi"><span class="es">Total MXN</span><span class="en">Total MXN</span></span></th>
+          <th><span class="bi"><span class="es">Total USD</span><span class="en">Total USD</span></span></th>
+        </tr></thead>
+        <tbody id="ventaMaterialesBody"></tbody>
+        <tfoot><tr class="total-row" id="ventaMaterialesTotal"></tr></tfoot>
+      </table></div>
+
+      <div class="field" style="max-width:260px; margin-top:14px;">
+        <label class="bi"><span class="es">% de ganancia (sobre el subtotal de venta)</span><span class="en">Profit % (over the sale subtotal)</span></label>
+        <select id="ventaPct" onchange="calcVenta()">
+          <option value="10">10%</option><option value="15">15%</option><option value="20">20%</option><option value="25">25%</option>
+          <option value="30" selected>30%</option><option value="35">35%</option><option value="40">40%</option><option value="45">45%</option><option value="50">50%</option>
+        </select>
+      </div>
+
+      <div class="row3" style="margin-top:14px;">
+        <div class="field"><label class="bi"><span class="es">Gastos logísticos (MXN)</span><span class="en">Logistics costs (MXN)</span></label><input type="number" id="ventaLogistica" value="0" onchange="calcVenta()"></div>
+        <div class="field"><label class="bi"><span class="es">Gastos operativos (MXN)</span><span class="en">Operating costs (MXN)</span></label><input type="number" id="ventaOperativos" value="0" onchange="calcVenta()"></div>
+        <div class="field"><label class="bi"><span class="es">Gastos administrativos (MXN)</span><span class="en">Administrative costs (MXN)</span></label><input type="number" id="ventaAdmin" value="0" onchange="calcVenta()"></div>
+      </div>
+
+      <div class="scroll-x"><table>
+        <thead><tr>
+          <th><span class="bi"><span class="es">Concepto</span><span class="en">Item</span></span></th>
+          <th><span class="bi"><span class="es">MXN</span></span></th>
+          <th><span class="bi"><span class="es">USD</span></span></th>
+        </tr></thead>
+        <tbody id="ventaBody"></tbody>
+      </table></div>
+
+      <div class="dim bi" style="margin:18px 0 6px;"><span class="es" style="font-weight:700;">Costo de compra resultante por material</span><span class="en">Resulting purchase cost per material</span></div>
+      <div class="scroll-x"><table>
+        <thead><tr>
+          <th><span class="bi"><span class="es">Material</span><span class="en">Material</span></span></th>
+          <th><span class="bi"><span class="es">Cantidad (kg)</span><span class="en">Quantity (kg)</span></span></th>
+          <th><span class="bi"><span class="es">Costo de compra MXN/kg</span><span class="en">Purchase cost MXN/kg</span></span></th>
+          <th><span class="bi"><span class="es">Costo de compra USD/kg</span><span class="en">Purchase cost USD/kg</span></span></th>
+        </tr></thead>
+        <tbody id="ventaResultadoBody"></tbody>
+      </table></div>
+      <div class="foot-note">La tarifa de compra resultante es una sola (repartida entre los kg totales recolectados) y se muestra aplicada a cada material del listado de arriba.
+        <span class="en-line">The resulting purchase rate is a single blended rate (spread across the total kg collected), shown applied to each material in the list above.</span></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let FX = 16.90;
+let THEME = 'light';
+
+function toggleTheme(){
+  THEME = THEME === 'light' ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', THEME);
+  document.getElementById('themeIcon').textContent = THEME === 'light' ? '🌙' : '☀️';
+  document.getElementById('themeLabel').textContent = THEME === 'light' ? 'Oscuro' : 'Claro';
+}
+
+let PRICING = [
+  {chem:"LCO", tipo:"NORMAL / Estándar", compra:25.00, venta:42.00},
+  {chem:"LCO", tipo:"Generales / General electronics", compra:30.00, venta:0},
+  {chem:"NMC EVs", tipo:"NORMAL / Estándar", compra:8.00, venta:30.00},
+  {chem:"NMC EVs", tipo:"Packs", compra:9.00, venta:0},
+  {chem:"NMC EVs", tipo:"Módulos / Modules", compra:10.00, venta:0},
+  {chem:"NMC EVs", tipo:"Celdas / Cells", compra:14.00, venta:0},
+  {chem:"NMC Mix", tipo:"— (sin tipo / no type)", compra:5.00, venta:21.17},
+  {chem:"NMC Herramientas/Electrodomésticos/Electrónicos", tipo:"Generales / General", compra:6.00, venta:21.17},
+  {chem:"NCA", tipo:"Packs", compra:12.00, venta:0},
+  {chem:"NCA", tipo:"Módulos / Modules", compra:14.00, venta:0},
+  {chem:"NCA", tipo:"Celda / Cell", compra:18.00, venta:0},
+];
+
+let CATALOGO = JSON.parse(JSON.stringify(PRICING)).concat([
+  {chem:"Computadoras de escritorio / Desktop computers", tipo:"General", compra:0, venta:0},
+  {chem:"Laptops / Laptops", tipo:"General", compra:0, venta:0},
+  {chem:"Monitores LCD/LED / LCD-LED monitors", tipo:"General", compra:0, venta:0},
+  {chem:"Monitores CRT / CRT monitors", tipo:"General", compra:0, venta:0},
+  {chem:"Televisores LCD/LED/Plasma / LCD-LED-Plasma TVs", tipo:"General", compra:0, venta:0},
+  {chem:"Televisores CRT / CRT TVs", tipo:"General", compra:0, venta:0},
+  {chem:"Impresoras y escáneres / Printers & scanners", tipo:"General", compra:0, venta:0},
+  {chem:"Teléfonos celulares / Cell phones", tipo:"General", compra:0, venta:0},
+  {chem:"Tablets / Tablets", tipo:"General", compra:0, venta:0},
+  {chem:"Servidores / Servers", tipo:"General", compra:0, venta:0},
+  {chem:"Tarjetas madre (PCB) / Motherboards (PCB)", tipo:"General", compra:0, venta:0},
+  {chem:"Discos duros / Hard drives", tipo:"General", compra:0, venta:0},
+  {chem:"Fuentes de poder / Power supplies", tipo:"General", compra:0, venta:0},
+  {chem:"Cables y arneses / Cables & harnesses", tipo:"General", compra:0, venta:0},
+  {chem:"Transformadores / Transformers", tipo:"General", compra:0, venta:0},
+  {chem:"Consolas de videojuegos / Game consoles", tipo:"General", compra:0, venta:0},
+  {chem:"Cámaras fotográficas y de video / Cameras", tipo:"General", compra:0, venta:0},
+  {chem:"Equipo de audio (bocinas/amplificadores) / Audio equipment", tipo:"General", compra:0, venta:0},
+  {chem:"Router/Modem/Networking / Networking equipment", tipo:"General", compra:0, venta:0},
+  {chem:"UPS / No-break / UPS (uninterruptible power supply)", tipo:"General", compra:0, venta:0},
+  {chem:"Cargadores y adaptadores / Chargers & adapters", tipo:"General", compra:0, venta:0},
+  {chem:"Línea blanca (refrigeradores/lavadoras) / White goods", tipo:"General", compra:0, venta:0},
+  {chem:"Electrodomésticos menores / Small appliances", tipo:"General", compra:0, venta:0},
+  {chem:"Aires acondicionados / Air conditioners", tipo:"General", compra:0, venta:0},
+  {chem:"Equipo médico electrónico / Electronic medical equipment", tipo:"General", compra:0, venta:0},
+  {chem:"Chatarra electrónica mixta / Mixed electronic scrap", tipo:"General", compra:0, venta:0},
+]);
+
+let BITACORA = [
+  {incl:false, fecha:"2026-08-05", empresa:"Ejemplo S.A. de C.V.", transporte:"Camión propio", acopio:"CDMX Norte", folio:"FOL-0001", matIdx:2, peso:500},
+];
+
+const LOGISTICS = [
+  {es:"Transporte Nacional (México)", en:"Domestic Transportation (Mexico)", amt:13949.00},
+  {es:"Tarimas, Manejo de Materiales y Etiquetado", en:"Pallets, Material Handling & Tagging", amt:3667.00},
+  {es:"Transporte de Residuos Peligrosos (Almacén de Exportación → frontera)", en:"HazWaste Transport (Export Warehouse → border)", amt:39568.00},
+  {es:"Agentes Aduanales", en:"Customs Agents", amt:20500.00},
+  {es:"Entrega a Almacén en Frontera EE.UU.", en:"Delivery to US Border Warehouse", amt:21280.00},
+  {es:"Gastos de Viaje Operativos", en:"Operational Travel Expenses", amt:8500.00},
+  {es:"Otros (gastos de traslado a frontera)", en:"Other (border crossing expenses)", amt:0.00},
+];
+let ACQUISITION = 74220.00;
+let VENTA_RATE = 20.91;
+let COMPRA_RATE = 4.00; // MXN/kg — 74220/18555 = 4.00 exacto
+let BITACORA_MODE = 'multi';
+let DIST_MONTO = 0;
+let DIST_KM_ADJ = 0;
+
+const fmtMXN = n => "$" + (n||0).toLocaleString('es-MX', {minimumFractionDigits:2, maximumFractionDigits:2});
+const fmtUSD = n => "US$" + (n||0).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+const fmtKg = n => (n||0).toLocaleString('es-MX', {maximumFractionDigits:0});
+// Envoltorios de color: MXN en negro/texto normal, USD en azul — para usar dentro de innerHTML
+const spanMXN = n => `<span class="mxn-color">${fmtMXN(n)}</span>`;
+const spanUSD = n => `<span class="usd-color">${fmtUSD(n)}</span>`;
+
+document.querySelectorAll('.tab').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById('tab-'+t.dataset.tab).classList.add('active');
+  });
+});
+
+// ---------- FX ----------
+async function fetchBanxico(){
+  const statusEl = document.getElementById('fxStatus');
+  statusEl.textContent = 'Consultando Banxico...'; statusEl.className = 'status warn';
+  const TOKEN = '145a435e703902c548f702dcbe608e23d04bbc1d10ff72c641b2156ac2f8d151';
+  // El token va como parametro en la URL (no como header Bmx-Token): asi la peticion es un GET
+  // simple sin preflight CORS, que es lo que fallaba antes ("Failed to fetch").
+  const url = 'https://www.banxico.org.mx/SieAPIRest/service/v1/series/SF43718/datos/oportuno?token=' + TOKEN + '&mediaType=json';
+  try{
+    const res = await fetch(url);
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const dato = data.bmx.series[0].datos[0];
+    FX = parseFloat(dato.dato);
+    document.getElementById('fxManual').value = FX.toFixed(4);
+    document.getElementById('fxDisplay').textContent = '$' + FX.toFixed(4);
+    statusEl.textContent = 'Actualizado ✓ · fecha: ' + dato.fecha; statusEl.className = 'status ok';
+  }catch(err){
+    statusEl.textContent = 'No se pudo conectar (bloqueo de red del entorno donde abriste el archivo). Actualiza manualmente. · ' + err.message;
+    statusEl.className = 'status err';
+  }
+  recalcAll();
+}
+function setFxManual(){ FX = parseFloat(document.getElementById('fxManual').value) || FX; document.getElementById('fxDisplay').textContent = '$' + FX.toFixed(4); recalcAll(); }
+
+// ---------- PRECIOS ----------
+function renderPricing(){
+  const body = document.getElementById('pricingBody'); body.innerHTML = '';
+  PRICING.forEach((p, i) => {
+    body.innerHTML += `<tr>
+      <td>${p.chem}</td><td>${p.tipo}</td>
+      <td class="input-cell"><input type="number" step="0.01" value="${p.compra.toFixed(2)}" onchange="PRICING[${i}].compra=parseFloat(this.value)||0;recalcAll();"></td>
+      <td class="num">${spanUSD(p.compra/FX)}</td>
+      <td class="input-cell"><input type="number" step="0.01" value="${p.venta.toFixed(2)}" onchange="PRICING[${i}].venta=parseFloat(this.value)||0;recalcAll();"></td>
+      <td class="num">${spanUSD(p.venta/FX)}</td>
+    </tr>`;
+  });
+}
+
+// ---------- CATALOGO ----------
+function renderCatalogo(){
+  const body = document.getElementById('catalogoBody'); body.innerHTML = '';
+  CATALOGO.forEach((p, i) => {
+    body.innerHTML += `<tr>
+      <td class="input-cell"><input type="text" value="${p.chem}" onchange="CATALOGO[${i}].chem=this.value;renderCatalogo();renderBitacora();"></td>
+      <td class="input-cell"><input type="text" value="${p.tipo}" onchange="CATALOGO[${i}].tipo=this.value;renderCatalogo();renderBitacora();"></td>
+      <td class="input-cell"><input type="number" step="0.01" value="${p.compra.toFixed(2)}" onchange="CATALOGO[${i}].compra=parseFloat(this.value)||0;recalcAll();"></td>
+      <td class="num">${spanUSD(p.compra/FX)}</td>
+      <td class="input-cell"><input type="number" step="0.01" value="${p.venta.toFixed(2)}" onchange="CATALOGO[${i}].venta=parseFloat(this.value)||0;recalcAll();"></td>
+      <td class="num">${spanUSD(p.venta/FX)}</td>
+      <td><button class="btn small ghost" onclick="removeCatalogRow(${i})">✕</button></td>
+    </tr>`;
+  });
+}
+function addCatalogRow(){ CATALOGO.push({chem:"Nueva categoría / New category", tipo:"General", compra:0, venta:0}); renderCatalogo(); renderBitacora(); }
+function removeCatalogRow(i){ CATALOGO.splice(i,1); renderCatalogo(); renderBitacora(); }
+
+// ---------- BITACORA (tarjetas de 3 lineas) ----------
+function renderBitacora(){
+  const cont = document.getElementById('bitacoraCards'); cont.innerHTML = '';
+
+  if(BITACORA_MODE === 'individual'){
+    if(BITACORA.length === 0){ BITACORA.push({incl:false, fecha:"", empresa:"", transporte:"", acopio:"", folio:"", matIdx:0, peso:0}); }
+    const h = BITACORA[0];
+    document.getElementById('indFecha').value = h.fecha;
+    document.getElementById('indEmpresa').value = h.empresa;
+    document.getElementById('indTransporte').value = h.transporte;
+    document.getElementById('indAcopio').value = h.acopio;
+    document.getElementById('indFolio').value = h.folio;
+
+    BITACORA.forEach((row, i) => {
+      const mat = CATALOGO[row.matIdx] || CATALOGO[0];
+      const compraKg = mat ? mat.compra : 0;
+      const ventaKg = mat ? mat.venta : 0;
+      const totCompraMXN = row.peso * compraKg;
+      const totVentaMXN = row.peso * ventaKg;
+      let options = CATALOGO.map((c,ci) => `<option value="${ci}" ${ci===row.matIdx?'selected':''}>${c.chem} | ${c.tipo}</option>`).join('');
+      const card = document.createElement('div');
+      card.className = 'bitacora-card';
+      card.innerHTML = `
+        <div class="bitacora-card-top">
+          <div class="left">
+            <input type="checkbox" ${row.incl?'checked':''} onchange="BITACORA[${i}].incl=this.checked;renderBitacora();">
+            <span class="bitacora-line-label">Material ${i+1} · Item ${i+1}</span>
+          </div>
+          <button class="btn-del" onclick="removeBitacoraRow(${i})" title="Eliminar línea / Delete line">✕ Eliminar</button>
+        </div>
+        <div class="bitacora-grid cols3">
+          <div class="f field" style="grid-column: span 2;"><label class="bi"><span class="es">Material</span><span class="en">Material</span></label>
+            <select onchange="BITACORA[${i}].matIdx=parseInt(this.value);renderBitacora();">${options}</select></div>
+          <div class="f field"><label class="bi"><span class="es">Peso (kg)</span><span class="en">Weight (kg)</span></label>
+            <input type="number" value="${row.peso}" onchange="BITACORA[${i}].peso=parseFloat(this.value)||0;renderBitacora();"></div>
+        </div>
+        <div class="bitacora-summary">
+          <div class="item"><span class="lbl">Compra MXN/kg</span><span class="val">${fmtMXN(compraKg)}</span></div>
+          <div class="item"><span class="lbl">Venta MXN/kg</span><span class="val">${fmtMXN(ventaKg)}</span></div>
+          <div class="item"><span class="lbl">Total Compra</span><span class="val">${fmtMXN(totCompraMXN)} · ${spanUSD(totCompraMXN/FX)}</span></div>
+          <div class="item"><span class="lbl">Total Venta</span><span class="val">${fmtMXN(totVentaMXN)} · ${spanUSD(totVentaMXN/FX)}</span></div>
+        </div>`;
+      cont.appendChild(card);
+    });
+  } else {
+    BITACORA.forEach((row, i) => {
+      const mat = CATALOGO[row.matIdx] || CATALOGO[0];
+      const compraKg = mat ? mat.compra : 0;
+      const ventaKg = mat ? mat.venta : 0;
+      const totCompraMXN = row.peso * compraKg;
+      const totVentaMXN = row.peso * ventaKg;
+      let options = CATALOGO.map((c,ci) => `<option value="${ci}" ${ci===row.matIdx?'selected':''}>${c.chem} | ${c.tipo}</option>`).join('');
+
+      const card = document.createElement('div');
+      card.className = 'bitacora-card';
+      card.innerHTML = `
+        <div class="bitacora-card-top">
+          <div class="left">
+            <input type="checkbox" ${row.incl?'checked':''} onchange="BITACORA[${i}].incl=this.checked;renderBitacora();">
+            <span class="bitacora-line-label">Línea ${i+1} · Line ${i+1}${row.folio ? ' — Folio '+row.folio : ''}</span>
+          </div>
+          <button class="btn-del" onclick="removeBitacoraRow(${i})" title="Eliminar línea / Delete line">✕ Eliminar</button>
+        </div>
+
+        <div class="bitacora-grid">
+          <div class="f field"><label class="bi"><span class="es">Fecha</span><span class="en">Date</span></label>
+            <input type="text" value="${row.fecha}" onchange="BITACORA[${i}].fecha=this.value;"></div>
+          <div class="f field"><label class="bi"><span class="es">Empresa</span><span class="en">Company</span></label>
+            <input type="text" value="${row.empresa}" onchange="BITACORA[${i}].empresa=this.value;"></div>
+          <div class="f field"><label class="bi"><span class="es">Transporte</span><span class="en">Transport</span></label>
+            <input type="text" value="${row.transporte}" onchange="BITACORA[${i}].transporte=this.value;"></div>
+          <div class="f field"><label class="bi"><span class="es">Centro de Acopio</span><span class="en">Collection Center</span></label>
+            <input type="text" value="${row.acopio}" onchange="BITACORA[${i}].acopio=this.value;"></div>
+        </div>
+
+        <div class="bitacora-grid cols3">
+          <div class="f field"><label class="bi"><span class="es">Folio</span><span class="en">Reference #</span></label>
+            <input type="text" value="${row.folio}" onchange="BITACORA[${i}].folio=this.value;renderBitacora();"></div>
+          <div class="f field"><label class="bi"><span class="es">Material</span><span class="en">Material</span></label>
+            <select onchange="BITACORA[${i}].matIdx=parseInt(this.value);renderBitacora();">${options}</select></div>
+          <div class="f field"><label class="bi"><span class="es">Peso (kg)</span><span class="en">Weight (kg)</span></label>
+            <input type="number" value="${row.peso}" onchange="BITACORA[${i}].peso=parseFloat(this.value)||0;renderBitacora();"></div>
+        </div>
+
+        <div class="bitacora-summary">
+          <div class="item"><span class="lbl">Compra MXN/kg</span><span class="val">${fmtMXN(compraKg)}</span></div>
+          <div class="item"><span class="lbl">Venta MXN/kg</span><span class="val">${fmtMXN(ventaKg)}</span></div>
+          <div class="item"><span class="lbl">Total Compra</span><span class="val">${fmtMXN(totCompraMXN)} · ${spanUSD(totCompraMXN/FX)}</span></div>
+          <div class="item"><span class="lbl">Total Venta</span><span class="val">${fmtMXN(totVentaMXN)} · ${spanUSD(totVentaMXN/FX)}</span></div>
+        </div>
+      `;
+      cont.appendChild(card);
+    });
+  }
+
+  let sumKg=0, sumCompra=0, sumVenta=0;
+  BITACORA.forEach(row => { if(row.incl){ const mat=CATALOGO[row.matIdx]||CATALOGO[0]; sumKg+=row.peso; sumCompra+=row.peso*mat.compra; sumVenta+=row.peso*mat.venta; } });
+  document.getElementById('totKg').textContent = fmtKg(sumKg) + ' kg';
+  document.getElementById('totCompraMXN').innerHTML = fmtMXN(sumCompra) + ' · ' + spanUSD(sumCompra/FX);
+  document.getElementById('totVentaMXN').innerHTML = fmtMXN(sumVenta) + ' · ' + spanUSD(sumVenta/FX);
+
+  // metricas de transporte, tomadas de Costeo por Distancia
+  const kgMXN = sumKg > 0 ? DIST_MONTO / sumKg : 0;
+  const kgUSD = kgMXN / FX;
+  const kgkmMXN = DIST_KM_ADJ > 0 ? kgMXN / DIST_KM_ADJ : 0;
+  const kgkmUSD = DIST_KM_ADJ > 0 ? kgUSD / DIST_KM_ADJ : 0;
+  document.getElementById('bitKgMXN').textContent = fmtMXN(kgMXN);
+  document.getElementById('bitKgUSD').innerHTML = spanUSD(kgUSD);
+  document.getElementById('bitKgKmMXN').textContent = '$' + kgkmMXN.toFixed(4);
+  document.getElementById('bitKgKmUSD').textContent = 'US$' + kgkmUSD.toFixed(4);
+}
+
+function setBitacoraMode(mode){
+  BITACORA_MODE = mode;
+  document.getElementById('individualHeaderCard').style.display = mode === 'individual' ? 'block' : 'none';
+  renderBitacora();
+}
+function setIndividualHeader(field, value){
+  BITACORA.forEach(row => row[field] = value);
+}
+function addBitacoraRow(){
+  if(BITACORA_MODE === 'individual' && BITACORA.length > 0){
+    const h = BITACORA[0];
+    BITACORA.push({incl:false, fecha:h.fecha, empresa:h.empresa, transporte:h.transporte, acopio:h.acopio, folio:h.folio, matIdx:0, peso:0});
+  } else {
+    BITACORA.push({incl:false, fecha:"", empresa:"", transporte:"", acopio:"", folio:"", matIdx:0, peso:0});
+  }
+  renderBitacora();
+}
+function removeBitacoraRow(i){ BITACORA.splice(i,1); renderBitacora(); }
+function enviarAExportacion(){
+  let sumKg=0, sumCompra=0, n=0;
+  BITACORA.forEach(row => { if(row.incl){ const mat=CATALOGO[row.matIdx]||CATALOGO[0]; sumKg+=row.peso; sumCompra+=row.peso*mat.compra; n++; } });
+  const statusEl = document.getElementById('bitacoraStatus');
+  if(n===0){ statusEl.textContent = 'No hay líneas marcadas / No lines checked.'; statusEl.className='status warn'; return; }
+  document.getElementById('kgEmbarque').value = sumKg;
+  COMPRA_RATE = sumKg > 0 ? sumCompra / sumKg : 0;
+  calcExport();
+  statusEl.textContent = `Enviado ✓ ${n} línea(s) → ${fmtKg(sumKg)} kg, precio de compra ${fmtMXN(COMPRA_RATE)}/kg. Revisa la pestaña Exportación.`;
+  statusEl.className = 'status ok';
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
+  document.querySelector('.tab[data-tab="export"]').classList.add('active');
+  document.getElementById('tab-export').classList.add('active');
+}
+
+// ---------- EXPORT ANALYSIS ----------
+function calcExport(){
+  const kgBat = parseFloat(document.getElementById('kgEmbarque').value) || 0;
+  const kgPack = parseFloat(document.getElementById('kgEmpaque').value) || 0;
+  const kgTotal = kgBat + kgPack;
+  document.getElementById('kgTotal').value = fmtKg(kgTotal) + ' kg';
+
+  const capEl = document.getElementById('capStatus');
+  if(kgTotal > 20000) capEl.innerHTML = ' — <b style="color:var(--red)">EXCEDE TOPE / OVER CAP</b>';
+  else if(kgBat < 18500 || kgBat > 19500) capEl.innerHTML = ' — <span style="color:var(--amber-warn)">fuera de rango / outside range</span>';
+  else capEl.innerHTML = ' — <span style="color:var(--green)">OK</span>';
+
+  const body = document.getElementById('exportBody'); body.innerHTML = '';
+  body.innerHTML += `<tr class="section-row"><td colspan="6">COMPRA / PURCHASE</td></tr>`;
+  body.innerHTML += `<tr><td>Precio de compra (MXN/kg) · Purchase price</td>
+    <td class="input-cell" colspan="2"><input type="number" step="0.01" value="${COMPRA_RATE.toFixed(2)}" onchange="COMPRA_RATE=parseFloat(this.value)||0;calcExport();"></td>
+    <td colspan="3"></td></tr>`;
+  ACQUISITION = COMPRA_RATE * kgBat;
+  body.innerHTML += `<tr><td><span class="bi"><span class="es" style="font-weight:400;">Costo de Adquisición (Subtotal)</span><span class="en">Acquisition Cost (Subtotal)</span></span></td>
+    <td class="num">${fmtMXN(ACQUISITION)}</td><td class="num">${spanUSD(ACQUISITION/FX)}</td>
+    <td class="num">${fmtKg(kgBat)}</td><td class="num">${fmtMXN(COMPRA_RATE)}</td><td class="num">${spanUSD(COMPRA_RATE/FX)}</td></tr>`;
+  body.innerHTML += `<tr><td class="dim" style="font-size:11px;" colspan="6">↳ este precio de compra viene de la Bitácora/Catálogo cuando envías líneas seleccionadas; puedes editarlo aquí manualmente también · this purchase rate comes from Bitácora/Catálogo when you send checked lines; you can also edit it here directly</td></tr>`;
+
+  body.innerHTML += `<tr class="section-row"><td colspan="6">GASTOS LOGÍSTICOS (fijos) / LOGISTICS (fixed)</td></tr>`;
+  let logisticsTotal = 0;
+  LOGISTICS.forEach((item, i) => { logisticsTotal += item.amt; body.innerHTML += rowHTML(item.es, item.en, item.amt, kgBat, 'log'+i); });
+  body.innerHTML += `<tr style="font-weight:600; font-style:italic;">
+    <td>Subtotal logística / Logistics subtotal</td>
+    <td class="num">${fmtMXN(logisticsTotal)}</td><td class="num">${spanUSD(logisticsTotal/FX)}</td>
+    <td class="num">${fmtKg(kgBat)}</td><td class="num">${fmtMXN(logisticsTotal/kgBat)}</td><td class="num">${spanUSD(logisticsTotal/kgBat/FX)}</td></tr>`;
+
+  const costoTotal = ACQUISITION + logisticsTotal;
+  body.innerHTML += `<tr class="total-row"><td>COSTO TOTAL / TOTAL COST</td>
+    <td class="num">${fmtMXN(costoTotal)}</td><td class="num">${spanUSD(costoTotal/FX)}</td>
+    <td class="num">${fmtKg(kgBat)}</td><td class="num">${fmtMXN(costoTotal/kgBat)}</td><td class="num">${spanUSD(costoTotal/kgBat/FX)}</td></tr>`;
+
+  body.innerHTML += `<tr class="section-row"><td colspan="6">VENTA / SALE</td></tr>`;
+  body.innerHTML += `<tr><td>Precio de venta (MXN/kg) · Sale price</td>
+    <td class="input-cell" colspan="2"><input type="number" step="0.01" value="${VENTA_RATE.toFixed(2)}" onchange="VENTA_RATE=parseFloat(this.value)||0;calcExport();"></td>
+    <td colspan="3"></td></tr>`;
+  const ventaTotal = VENTA_RATE * kgBat;
+  body.innerHTML += `<tr><td>Venta total del embarque / Total shipment sale</td>
+    <td class="num">${fmtMXN(ventaTotal)}</td><td class="num">${spanUSD(ventaTotal/FX)}</td>
+    <td class="num">${fmtKg(kgBat)}</td><td class="num">${fmtMXN(VENTA_RATE)}</td><td class="num">${spanUSD(VENTA_RATE/FX)}</td></tr>`;
+
+  const margen = ventaTotal - costoTotal;
+  body.innerHTML += `<tr class="margin-row"><td>MARGEN / MARGIN</td>
+    <td class="num">${fmtMXN(margen)}</td><td class="num">${spanUSD(margen/FX)}</td>
+    <td class="num">${fmtKg(kgBat)}</td><td class="num">${fmtMXN(margen/(kgBat||1))}</td><td class="num">${spanUSD(margen/(kgBat||1)/FX)}</td></tr>`;
+
+  const pct = ventaTotal !== 0 ? margen/ventaTotal : 0;
+  const pctEl = document.getElementById('marginPct'); const flagEl = document.getElementById('marginFlag');
+  pctEl.textContent = (pct*100).toFixed(1) + '%';
+  if(pct >= 0.4){ pctEl.style.color = 'var(--green)'; flagEl.textContent = '🟢'; }
+  else if(pct >= 0){ pctEl.style.color = 'var(--amber-warn)'; flagEl.textContent = '🟡'; }
+  else { pctEl.style.color = 'var(--red)'; flagEl.textContent = '🔴'; }
+}
+function rowHTML(esName, enName, amt, kg, id){
+  const perKgMXN = kg > 0 ? amt/kg : 0;
+  return `<tr><td><span class="bi"><span class="es" style="font-weight:400;">${esName}</span><span class="en">${enName}</span></span></td>
+    <td class="input-cell"><input type="number" step="0.01" value="${amt.toFixed(2)}" onchange="updateAmount('${id}', this.value)"></td>
+    <td class="num">${spanUSD(amt/FX)}</td><td class="num">${fmtKg(kg)}</td>
+    <td class="num">${fmtMXN(perKgMXN)}</td><td class="num">${spanUSD(perKgMXN/FX)}</td></tr>`;
+}
+function updateAmount(id, val){
+  const v = parseFloat(val) || 0;
+  if(id === 'acq'){ ACQUISITION = v; } else if(id.startsWith('log')){ LOGISTICS[parseInt(id.replace('log',''))].amt = v; }
+  calcExport();
+}
+
+// ---------- COSTEO POR DISTANCIA ----------
+// ---------- AUTOCOMPLETADO DE DIRECCIONES (Photon / OpenStreetMap) ----------
+let sugerenciaTimer = null;
+const MEXICO_LAT = 23.6345, MEXICO_LON = -102.5528; // sesga resultados hacia Mexico, sin restringir a Mexico
+
+function buscarSugerencias(inputId, listId){
+  clearTimeout(sugerenciaTimer);
+  const q = document.getElementById(inputId).value.trim();
+  const listEl = document.getElementById(listId);
+  if(q.length < 4){ listEl.style.display = 'none'; return; }
+  sugerenciaTimer = setTimeout(async () => {
+    try{
+      const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&lat=${MEXICO_LAT}&lon=${MEXICO_LON}&limit=6`;
+      const res = await fetch(url);
+      if(!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      if(!data.features || !data.features.length){ listEl.style.display = 'none'; return; }
+      listEl.innerHTML = '';
+      data.features.forEach(f => {
+        const p = f.properties;
+        const parts = [p.name, p.street, p.housenumber, p.district, p.city, p.state, p.country].filter(Boolean);
+        const label = [...new Set(parts)].join(', ');
+        const div = document.createElement('div');
+        div.className = 'addr-suggestion-item';
+        div.textContent = label;
+        div.onclick = () => { document.getElementById(inputId).value = label; listEl.style.display = 'none'; };
+        listEl.appendChild(div);
+      });
+      listEl.style.display = 'block';
+    }catch(err){
+      listEl.style.display = 'none'; // silencioso: el campo sigue siendo editable a mano
+    }
+  }, 450);
+}
+document.addEventListener('click', (e) => {
+  if(!e.target.closest('.addr-wrap')){
+    document.getElementById('origenSug').style.display = 'none';
+    document.getElementById('destinoSug').style.display = 'none';
+  }
+});
+
+async function calcularDistanciaOSM(){
+  const statusEl = document.getElementById('osmStatus');
+  const origin = document.getElementById('origenTxt').value.trim();
+  const destination = document.getElementById('destinoTxt').value.trim();
+  if(!origin || !destination){ statusEl.textContent = 'Captura origen y destino / Enter origin and destination.'; statusEl.className='status warn'; return; }
+  statusEl.textContent = 'Buscando coordenadas... / Geocoding...'; statusEl.className = 'status warn';
+  try{
+    const geocode = async (q) => {
+      const url = 'https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' + encodeURIComponent(q);
+      const res = await fetch(url);
+      if(!res.ok) throw new Error('Nominatim HTTP ' + res.status);
+      const data = await res.json();
+      if(!data.length) throw new Error('No se encontró "' + q + '" / "' + q + '" not found');
+      return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) };
+    };
+    const o = await geocode(origin);
+    // Nominatim pide max 1 req/seg
+    await new Promise(r => setTimeout(r, 1100));
+    const d = await geocode(destination);
+
+    statusEl.textContent = 'Calculando ruta... / Calculating route...'; statusEl.className = 'status warn';
+    const routeUrl = `https://router.project-osrm.org/route/v1/driving/${o.lon},${o.lat};${d.lon},${d.lat}?overview=false`;
+    const routeRes = await fetch(routeUrl);
+    if(!routeRes.ok) throw new Error('OSRM HTTP ' + routeRes.status);
+    const routeData = await routeRes.json();
+    if(routeData.code !== 'Ok') throw new Error('OSRM: ' + routeData.code);
+    const km = routeData.routes[0].distance / 1000;
+    document.getElementById('kmManual').value = km.toFixed(1);
+    statusEl.textContent = `Distancia obtenida ✓ ${km.toFixed(1)} km (OpenStreetMap)`; statusEl.className = 'status ok';
+    calcDistancia();
+  }catch(err){
+    statusEl.textContent = 'No se pudo calcular (servicio no disponible ahora, o bloqueo de red del entorno). Usa el campo manual. · ' + err.message;
+    statusEl.className = 'status err';
+  }
+}
+
+async function calcularDistanciaGoogle(){
+  const key = document.getElementById('gmapsKey').value.trim();
+  const statusEl = document.getElementById('gmapsStatus');
+  if(!key){ statusEl.textContent = 'Pega tu API key primero / Paste your API key first.'; statusEl.className='status warn'; return; }
+  statusEl.textContent = 'Cargando Google Maps...'; statusEl.className='status warn';
+  try{
+    if(!window.google || !window.google.maps){
+      await new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = `https://maps.googleapis.com/maps/api/js?key=${key}`;
+        s.onload = resolve; s.onerror = () => reject(new Error('No se pudo cargar el script de Google Maps'));
+        document.head.appendChild(s);
+      });
+    }
+    const service = new google.maps.DistanceMatrixService();
+    const origin = document.getElementById('origenTxt').value;
+    const destination = document.getElementById('destinoTxt').value;
+    service.getDistanceMatrix({ origins:[origin], destinations:[destination], travelMode:'DRIVING' }, (resp, status) => {
+      if(status !== 'OK') { statusEl.textContent = 'Google Maps respondió: ' + status; statusEl.className='status err'; return; }
+      const el = resp.rows[0].elements[0];
+      if(el.status !== 'OK'){ statusEl.textContent = 'No se encontró ruta: ' + el.status; statusEl.className='status err'; return; }
+      const km = el.distance.value / 1000;
+      document.getElementById('kmManual').value = km.toFixed(1);
+      statusEl.textContent = `Distancia obtenida ✓ ${km.toFixed(1)} km`; statusEl.className='status ok';
+      calcDistancia();
+    });
+  }catch(err){
+    statusEl.textContent = 'No se pudo conectar a Google Maps (bloqueo de red/CORS del entorno o key inválida). Usa el campo manual. · ' + err.message;
+    statusEl.className = 'status err';
+  }
+}
+function calcDistancia(){
+  const km = parseFloat(document.getElementById('kmManual').value) || 0;
+  const pctAdicional = parseFloat(document.getElementById('aplicar15').value) || 0;
+  const kmAdj = km * (1 + pctAdicional/100);
+  document.getElementById('kmAjustados').value = kmAdj.toFixed(2) + ' km';
+  const peso = parseFloat(document.getElementById('pesoDist').value) || 0;
+  const monto = parseFloat(document.getElementById('montoDist').value) || 0;
+  const kgMXN = peso > 0 ? monto/peso : 0;
+  const kgUSD = kgMXN / FX;
+  const kgkmMXN = kmAdj > 0 ? kgMXN/kmAdj : 0;
+  const kgkmUSD = kmAdj > 0 ? kgUSD/kmAdj : 0;
+  document.getElementById('distKgMXN').textContent = fmtMXN(kgMXN);
+  document.getElementById('distKgUSD').innerHTML = spanUSD(kgUSD);
+  document.getElementById('distKgKmMXN').textContent = '$' + kgkmMXN.toFixed(4);
+  document.getElementById('distKgKmUSD').textContent = 'US$' + kgkmUSD.toFixed(4);
+  DIST_MONTO = monto;
+  DIST_KM_ADJ = kmAdj;
+  renderBitacora();
+}
+
+// ---------- ACOPIO ----------
+function calcAcopio(){
+  const tarifa = parseFloat(document.getElementById('tarifaAcopio').value) || 0;
+  const kg = parseFloat(document.getElementById('kgExcedente').value) || 0;
+  const meses = parseFloat(document.getElementById('mesesAcopio').value) || 0;
+  const costoMXN = tarifa * kg * meses;
+  document.getElementById('acopioMXN').textContent = fmtMXN(costoMXN);
+  document.getElementById('acopioUSD').innerHTML = spanUSD(costoMXN / FX);
+}
+
+// ---------- DESCARGA A EXCEL (SheetJS, por pestaña) ----------
+function downloadSheet(filename, sheetName, aoa){
+  try{
+    const wsx = XLSX.utils.aoa_to_sheet(aoa);
+    const wbx = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wbx, wsx, sheetName);
+    XLSX.writeFile(wbx, filename);
+  }catch(err){
+    alert('No se pudo generar el Excel (posible bloqueo de red al cargar la librería). / Could not generate the Excel file (possible network block loading the library).\n' + err.message);
+  }
+}
+
+function exportFX(){
+  const aoa = [
+    ["Tipo de Cambio / Exchange Rate"], [],
+    ["Concepto / Item", "Valor / Value"],
+    ["Tipo de cambio MXN/USD / Exchange rate MXN/USD", FX],
+    ["Fuente / Source", "Banco de México · SIE API · Serie SF43718 (FIX)"],
+  ];
+  downloadSheet('NIUNIU_TipoDeCambio.xlsx', 'TipoDeCambio', aoa);
+}
+
+function exportPrecios(){
+  const aoa = [["Química / Chemistry","Tipo / Type","Compra MXN/kg / Purchase MXN/kg","Compra USD/kg / Purchase USD/kg","Venta MXN/kg / Sale MXN/kg","Venta USD/kg / Sale USD/kg"]];
+  PRICING.forEach(p => aoa.push([p.chem, p.tipo, p.compra, +(p.compra/FX).toFixed(4), p.venta, +(p.venta/FX).toFixed(4)]));
+  downloadSheet('NIUNIU_Precios.xlsx', 'Precios', aoa);
+}
+
+function exportCatalogo(){
+  const aoa = [["Categoría / Category","Tipo / Type","Compra MXN/kg / Purchase MXN/kg","Compra USD/kg / Purchase USD/kg","Venta MXN/kg / Sale MXN/kg","Venta USD/kg / Sale USD/kg"]];
+  CATALOGO.forEach(p => aoa.push([p.chem, p.tipo, p.compra, +(p.compra/FX).toFixed(4), p.venta, +(p.venta/FX).toFixed(4)]));
+  downloadSheet('NIUNIU_Catalogo.xlsx', 'Catalogo', aoa);
+}
+
+function downloadTemplateCatalogo(){
+  const aoa = [
+    ["Categoría / Category","Tipo / Type","Compra MXN/kg / Purchase MXN/kg","Venta MXN/kg / Sale MXN/kg"],
+    ["EJEMPLO - Bocinas Bluetooth / EXAMPLE - Bluetooth speakers","General",3.50,12.00],
+  ];
+  downloadSheet('NIUNIU_Plantilla_Catalogo.xlsx', 'Plantilla', aoa);
+}
+
+function uploadCatalogo(evt){
+  const file = evt.target.files[0];
+  const statusEl = document.getElementById('catalogoUploadStatus');
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    try{
+      const wbx = XLSX.read(new Uint8Array(e.target.result), {type:'array'});
+      const ws = wbx.Sheets[wbx.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, {header:1});
+      let n = 0;
+      for(let i=1; i<rows.length; i++){
+        const row = rows[i];
+        if(!row || !row[0] || String(row[0]).trim()==='') continue;
+        if(String(row[0]).toUpperCase().includes('EJEMPLO') || String(row[0]).toUpperCase().includes('EXAMPLE')) continue;
+        CATALOGO.push({
+          chem: String(row[0]).trim(),
+          tipo: row[1] ? String(row[1]).trim() : 'General',
+          compra: parseFloat(row[2]) || 0,
+          venta: parseFloat(row[3]) || 0,
+        });
+        n++;
+      }
+      renderCatalogo(); renderBitacora();
+      statusEl.textContent = `Importadas ${n} categoría(s) ✓ / ${n} categories imported ✓`;
+      statusEl.className = 'status ok';
+    }catch(err){
+      statusEl.textContent = 'Error al leer el archivo / Error reading file: ' + err.message;
+      statusEl.className = 'status err';
+    }
+    evt.target.value = '';
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function exportBitacora(){
+  const aoa = [["Incluir / Include","Fecha / Date","Empresa / Company","Transporte / Transport","Centro de Acopio / Collection Center","Folio / Reference #","Material","Peso kg / Weight kg","Compra MXN/kg","Venta MXN/kg","Total Compra MXN","Total Compra USD","Total Venta MXN","Total Venta USD"]];
+  BITACORA.forEach(row => {
+    const mat = CATALOGO[row.matIdx] || CATALOGO[0];
+    const tc = row.peso*mat.compra, tv = row.peso*mat.venta;
+    aoa.push([row.incl?'Sí':'No', row.fecha, row.empresa, row.transporte, row.acopio, row.folio, mat.chem+' | '+mat.tipo, row.peso, mat.compra, mat.venta, tc, +(tc/FX).toFixed(2), tv, +(tv/FX).toFixed(2)]);
+  });
+  let sumKg=0, sumC=0, sumV=0;
+  BITACORA.forEach(row => { if(row.incl){ const mat=CATALOGO[row.matIdx]||CATALOGO[0]; sumKg+=row.peso; sumC+=row.peso*mat.compra; sumV+=row.peso*mat.venta; } });
+  aoa.push([]);
+  aoa.push(['TOTALES (solo Incluir=Sí) / TOTALS (Include=Yes only)','','','','','','', sumKg,'','', sumC, +(sumC/FX).toFixed(2), sumV, +(sumV/FX).toFixed(2)]);
+  aoa.push([]);
+  aoa.push(['Métrica de transporte (Costeo por Distancia) / Transport metric (Distance Costing)']);
+  const kgMXN = sumKg > 0 ? DIST_MONTO/sumKg : 0;
+  aoa.push(['$/kg MXN', kgMXN, '$/kg USD', kgMXN/FX]);
+  aoa.push(['$/(kg·km) MXN', DIST_KM_ADJ>0?kgMXN/DIST_KM_ADJ:0, '$/(kg·km) USD', DIST_KM_ADJ>0?(kgMXN/FX)/DIST_KM_ADJ:0]);
+  downloadSheet('NIUNIU_Bitacora.xlsx', 'Bitacora', aoa);
+}
+
+function downloadTemplateBitacora(){
+  const aoa = [
+    ["Fecha / Date","Empresa / Company","Transporte / Transport","Centro de Acopio / Collection Center","Folio / Reference #","Categoría / Category","Tipo / Type","Peso kg / Weight kg"],
+    ["EJEMPLO - 2026-08-05 / EXAMPLE","Proveedor S.A. de C.V.","Camión propio / Own truck","CDMX Norte","FOL-0001","NMC EVs","NORMAL / Estándar",500],
+  ];
+  downloadSheet('NIUNIU_Plantilla_Bitacora.xlsx', 'Plantilla', aoa);
+}
+
+function uploadBitacora(evt){
+  const file = evt.target.files[0];
+  const statusEl = document.getElementById('bitacoraUploadStatus');
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    try{
+      const wbx = XLSX.read(new Uint8Array(e.target.result), {type:'array'});
+      const ws = wbx.Sheets[wbx.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, {header:1});
+      let n = 0, sinMatch = 0;
+      for(let i=1; i<rows.length; i++){
+        const row = rows[i];
+        if(!row || !row[0] || String(row[0]).trim()==='') continue;
+        if(String(row[0]).toUpperCase().includes('EJEMPLO') || String(row[0]).toUpperCase().includes('EXAMPLE')) continue;
+        const cat = row[5] ? String(row[5]).trim() : '';
+        const tipo = row[6] ? String(row[6]).trim() : '';
+        let matIdx = CATALOGO.findIndex(c => c.chem.trim()===cat && c.tipo.trim()===tipo);
+        if(matIdx < 0){ matIdx = 0; sinMatch++; }
+        BITACORA.push({
+          incl:false,
+          fecha: row[0] ? String(row[0]).trim() : '',
+          empresa: row[1] ? String(row[1]).trim() : '',
+          transporte: row[2] ? String(row[2]).trim() : '',
+          acopio: row[3] ? String(row[3]).trim() : '',
+          folio: row[4] ? String(row[4]).trim() : '',
+          matIdx: matIdx,
+          peso: parseFloat(row[7]) || 0,
+        });
+        n++;
+      }
+      renderBitacora();
+      let msg = `Importadas ${n} línea(s) ✓ / ${n} lines imported ✓`;
+      if(sinMatch > 0) msg += ` — ${sinMatch} sin coincidencia exacta de Categoría/Tipo en el Catálogo (quedaron con la primera del catálogo, revísalas) / ${sinMatch} without an exact Category/Type match in the Catalog (defaulted to the first item, please review)`;
+      statusEl.textContent = msg;
+      statusEl.className = sinMatch>0 ? 'status warn' : 'status ok';
+    }catch(err){
+      statusEl.textContent = 'Error al leer el archivo / Error reading file: ' + err.message;
+      statusEl.className = 'status err';
+    }
+    evt.target.value = '';
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function exportExportAnalysis(){
+  const kgBat = parseFloat(document.getElementById('kgEmbarque').value) || 0;
+  const kgPack = parseFloat(document.getElementById('kgEmpaque').value) || 0;
+  const acquisition = COMPRA_RATE * kgBat;
+  let logisticsTotal = 0; LOGISTICS.forEach(it => logisticsTotal += it.amt);
+  const costoTotal = acquisition + logisticsTotal;
+  const ventaTotal = VENTA_RATE * kgBat;
+  const margen = ventaTotal - costoTotal;
+  const pct = ventaTotal !== 0 ? margen/ventaTotal : 0;
+
+  const aoa = [
+    ["Análisis de Exportación / Export Analysis"], [],
+    ["Peso de batería embarcado (kg) / Battery weight shipped (kg)", kgBat],
+    ["Empaque adicional (kg) / Additional packaging (kg)", kgPack],
+    [],
+    ["Concepto / Item","Monto MXN / Amount MXN","Monto USD / Amount USD","Base (kg)","$/kg MXN","$/kg USD"],
+    ["Precio de compra (MXN/kg) / Purchase price", COMPRA_RATE, "", "", "", ""],
+    ["Acquisition Cost (Subtotal) / Costo de Adquisición", acquisition, +(acquisition/FX).toFixed(2), kgBat, COMPRA_RATE, +(COMPRA_RATE/FX).toFixed(4)],
+  ];
+  LOGISTICS.forEach(it => aoa.push([`${it.es} / ${it.en}`, it.amt, +(it.amt/FX).toFixed(2), kgBat, +(kgBat?it.amt/kgBat:0).toFixed(4), +(kgBat?(it.amt/kgBat)/FX:0).toFixed(4)]));
+  aoa.push(["Subtotal logística / Logistics subtotal", logisticsTotal, +(logisticsTotal/FX).toFixed(2), kgBat, +(kgBat?logisticsTotal/kgBat:0).toFixed(4), +(kgBat?(logisticsTotal/kgBat)/FX:0).toFixed(4)]);
+  aoa.push(["COSTO TOTAL / TOTAL COST", costoTotal, +(costoTotal/FX).toFixed(2), kgBat, +(kgBat?costoTotal/kgBat:0).toFixed(4), +(kgBat?(costoTotal/kgBat)/FX:0).toFixed(4)]);
+  aoa.push([]);
+  aoa.push(["Precio de venta (MXN/kg) / Sale price", VENTA_RATE]);
+  aoa.push(["Venta total del embarque / Total shipment sale", ventaTotal, +(ventaTotal/FX).toFixed(2), kgBat, VENTA_RATE, +(VENTA_RATE/FX).toFixed(4)]);
+  aoa.push([]);
+  aoa.push(["MARGEN / MARGIN", margen, +(margen/FX).toFixed(2), kgBat, +(kgBat?margen/kgBat:0).toFixed(4), +(kgBat?(margen/kgBat)/FX:0).toFixed(4)]);
+  aoa.push(["% Margen sobre Venta / Margin % over Sale", (pct*100).toFixed(1)+'%']);
+  downloadSheet('NIUNIU_AnalisisExportacion.xlsx', 'Exportacion', aoa);
+}
+
+function exportDistancia(){
+  const origen = document.getElementById('origenTxt').value;
+  const destino = document.getElementById('destinoTxt').value;
+  const km = parseFloat(document.getElementById('kmManual').value) || 0;
+  const pctAdicional = parseFloat(document.getElementById('aplicar15').value) || 0;
+  const kmAdj = km * (1 + pctAdicional/100);
+  const peso = parseFloat(document.getElementById('pesoDist').value) || 0;
+  const monto = parseFloat(document.getElementById('montoDist').value) || 0;
+  const kgMXN = peso>0 ? monto/peso : 0;
+  const kgUSD = kgMXN/FX;
+  const kgkmMXN = kmAdj>0 ? kgMXN/kmAdj : 0;
+  const kgkmUSD = kmAdj>0 ? kgUSD/kmAdj : 0;
+  const aoa = [
+    ["Costeo por Distancia / Distance-based Costing"], [],
+    ["Lugar de salida / Origin", origen],
+    ["Lugar de llegada / Destination", destino],
+    ["Kilómetros / Kilometers", km],
+    ["Adicional por distancia / Distance surcharge", pctAdicional + '%'],
+    ["Km ajustados / Adjusted km", +kmAdj.toFixed(2)],
+    ["Peso (kg) / Weight (kg)", peso],
+    ["Monto total de transporte (MXN) / Total transport amount (MXN)", monto],
+    [],
+    ["$/kg MXN", +kgMXN.toFixed(4)],
+    ["$/kg USD", +kgUSD.toFixed(4)],
+    ["$/(kg·km) MXN", +kgkmMXN.toFixed(4)],
+    ["$/(kg·km) USD", +kgkmUSD.toFixed(4)],
+  ];
+  downloadSheet('NIUNIU_CosteoDistancia.xlsx', 'CosteoDistancia', aoa);
+}
+
+function exportAcopio(){
+  const tarifa = parseFloat(document.getElementById('tarifaAcopio').value) || 0;
+  const kg = parseFloat(document.getElementById('kgExcedente').value) || 0;
+  const meses = parseFloat(document.getElementById('mesesAcopio').value) || 0;
+  const costoMXN = tarifa*kg*meses;
+  const aoa = [
+    ["Acopio Temporal / Temporary Storage"], [],
+    ["Tarifa (MXN/kg/mes nominal) / Rate (MXN/kg/nominal month)", tarifa],
+    ["Kg excedentes en acopio / Excess kg in storage", kg],
+    ["Meses facturables / Billable months", meses],
+    [],
+    ["Costo de acopio temporal (MXN) / Storage cost (MXN)", costoMXN],
+    ["Costo de acopio temporal (USD) / Storage cost (USD)", +(costoMXN/FX).toFixed(2)],
+  ];
+  downloadSheet('NIUNIU_AcopioTemporal.xlsx', 'AcopioTemporal', aoa);
+}
+
+// ---------- COMPRA ----------
+let COMPRA_MATERIALES = [
+  {matIdx:0, costo:0, cantidad:0},
+  {matIdx:0, costo:0, cantidad:0},
+  {matIdx:0, costo:0, cantidad:0},
+  {matIdx:0, costo:0, cantidad:0},
+  {matIdx:0, costo:0, cantidad:0},
+];
+
+function renderCompra(){
+  const body = document.getElementById('compraMaterialesBody'); body.innerHTML = '';
+  let sumMXN = 0;
+  COMPRA_MATERIALES.forEach((line, i) => {
+    const mat = CATALOGO[line.matIdx] || CATALOGO[0];
+    const totMXN = line.costo * line.cantidad;
+    sumMXN += totMXN;
+    let options = CATALOGO.map((c,ci) => `<option value="${ci}" ${ci===line.matIdx?'selected':''}>${c.chem} | ${c.tipo}</option>`).join('');
+    body.innerHTML += `<tr>
+      <td class="input-cell"><select onchange="COMPRA_MATERIALES[${i}].matIdx=parseInt(this.value);renderCompra();">${options}</select></td>
+      <td class="input-cell"><input type="number" step="0.01" value="${line.costo}" onchange="COMPRA_MATERIALES[${i}].costo=parseFloat(this.value)||0;renderCompra();"></td>
+      <td class="input-cell"><input type="number" value="${line.cantidad}" onchange="COMPRA_MATERIALES[${i}].cantidad=parseFloat(this.value)||0;renderCompra();"></td>
+      <td class="num">${fmtMXN(totMXN)}</td>
+      <td class="num usd-color">${fmtUSD(totMXN/FX)}</td>
+    </tr>`;
+  });
+  document.getElementById('compraMaterialesTotal').innerHTML = `
+    <td>Subtotal materiales / Materials subtotal</td><td></td><td></td>
+    <td class="num">${fmtMXN(sumMXN)}</td><td class="num usd-color">${fmtUSD(sumMXN/FX)}</td>`;
+  calcCompra();
+}
+
+function calcCompra(){
+  let sumMateriales = 0, sumKgMateriales = 0;
+  COMPRA_MATERIALES.forEach(l => { sumMateriales += l.costo * l.cantidad; sumKgMateriales += l.cantidad; });
+  const logistica = parseFloat(document.getElementById('compraLogistica').value) || 0;
+  const operativos = parseFloat(document.getElementById('compraOperativos').value) || 0;
+  const admin = parseFloat(document.getElementById('compraAdmin').value) || 0;
+  const subtotal = sumMateriales + logistica + operativos + admin;
+  document.getElementById('compraSubtotalMXN').textContent = fmtMXN(subtotal);
+  document.getElementById('compraSubtotalUSD').innerHTML = spanUSD(subtotal/FX);
+
+  const disposicionKg = parseFloat(document.getElementById('compraDisposicion').value) || 0; // MXN/kg
+  const disposicionMonto = disposicionKg * sumKgMateriales; // se escala con el kg total capturado en las 5 lineas
+  const pct = parseFloat(document.getElementById('compraPct').value) || 0;
+  const ganancia = disposicionMonto * (pct/100);
+  const total = disposicionMonto + ganancia;
+  const margenReal = disposicionMonto - subtotal;
+  const pctMargenReal = disposicionMonto !== 0 ? margenReal/disposicionMonto : 0;
+
+  const body = document.getElementById('compraMargenBody'); body.innerHTML = '';
+  body.innerHTML += `<tr><td>Kg totales capturados (5 líneas) / Total kg captured</td><td class="num">${fmtKg(sumKgMateriales)} kg</td><td></td></tr>`;
+  body.innerHTML += `<tr><td>Precio de disposición final (${fmtMXN(disposicionKg)}/kg) × kg / Final disposal price × kg</td><td class="num">${fmtMXN(disposicionMonto)}</td><td class="num usd-color">${spanUSD(disposicionMonto/FX)}</td></tr>`;
+  body.innerHTML += `<tr><td>Ganancia deseada (${pct}% s/disposición) / Desired profit</td><td class="num">${fmtMXN(ganancia)}</td><td class="num usd-color">${spanUSD(ganancia/FX)}</td></tr>`;
+  body.innerHTML += `<tr class="total-row"><td>TOTAL (disposición + ganancia) / TOTAL</td><td class="num">${fmtMXN(total)}</td><td class="num">${spanUSD(total/FX)}</td></tr>`;
+  body.innerHTML += `<tr><td>Subtotal de costos / Cost subtotal</td><td class="num">${fmtMXN(subtotal)}</td><td class="num usd-color">${spanUSD(subtotal/FX)}</td></tr>`;
+  body.innerHTML += `<tr class="margin-row"><td>Margen real (disposición − subtotal) / Real margin</td><td class="num">${fmtMXN(margenReal)}</td><td class="num">${spanUSD(margenReal/FX)}</td></tr>`;
+
+  const pctEl = document.getElementById('compraMarginPct'); const flagEl = document.getElementById('compraMarginFlag');
+  pctEl.textContent = (pctMargenReal*100).toFixed(1) + '%';
+  if(pctMargenReal >= 0.4){ pctEl.style.color = 'var(--green)'; flagEl.textContent = '🟢'; }
+  else if(pctMargenReal >= 0){ pctEl.style.color = 'var(--amber-warn)'; flagEl.textContent = '🟡'; }
+  else { pctEl.style.color = 'var(--red)'; flagEl.textContent = '🔴'; }
+
+  drawBreakEvenChart(subtotal, disposicionMonto, pct);
+}
+
+function drawBreakEvenChart(subtotal, disposicion, selectedPct){
+  const pcts = [10,15,20,25,30,35,40,45,50];
+  const totals = pcts.map(p => disposicion * (1 + p/100));
+  const maxVal = Math.max(subtotal, ...totals, 1);
+  const W = 640, H = 220, padL = 60, padR = 20, padT = 16, padB = 30;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+  const xFor = i => padL + (i/(pcts.length-1)) * plotW;
+  const yFor = v => padT + plotH - (v/maxVal) * plotH;
+
+  const subtotalY = yFor(subtotal);
+  const totalPoints = totals.map((v,i) => `${xFor(i)},${yFor(v)}`).join(' ');
+  const selIdx = pcts.indexOf(selectedPct);
+  const selX = selIdx>=0 ? xFor(selIdx) : xFor(0);
+  const selY = selIdx>=0 ? yFor(totals[selIdx]) : yFor(totals[0]);
+  const gap = (selIdx>=0 ? totals[selIdx] : totals[0]) - subtotal;
+
+  let svg = `<svg viewBox="0 0 ${W} ${H}" style="width:100%; height:auto; max-width:640px; font-family:Inter,sans-serif;">`;
+  // ejes
+  svg += `<line x1="${padL}" y1="${padT}" x2="${padL}" y2="${H-padB}" stroke="var(--line)" stroke-width="1"/>`;
+  svg += `<line x1="${padL}" y1="${H-padB}" x2="${W-padR}" y2="${H-padB}" stroke="var(--line)" stroke-width="1"/>`;
+  // linea subtotal (plana)
+  svg += `<line x1="${padL}" y1="${subtotalY}" x2="${W-padR}" y2="${subtotalY}" stroke="var(--red)" stroke-width="2" stroke-dasharray="5,4"/>`;
+  svg += `<text x="${W-padR}" y="${subtotalY-6}" text-anchor="end" font-size="10" fill="var(--red)">Subtotal costos</text>`;
+  // linea total (creciente)
+  svg += `<polyline points="${totalPoints}" fill="none" stroke="var(--purple)" stroke-width="2.5"/>`;
+  pcts.forEach((p,i) => { svg += `<circle cx="${xFor(i)}" cy="${yFor(totals[i])}" r="3" fill="var(--purple)"/>`; });
+  // etiquetas eje X
+  pcts.forEach((p,i) => { svg += `<text x="${xFor(i)}" y="${H-padB+14}" text-anchor="middle" font-size="9" fill="var(--text-dim)">${p}%</text>`; });
+  // marcador del % seleccionado
+  svg += `<line x1="${selX}" y1="${padT}" x2="${selX}" y2="${H-padB}" stroke="var(--amber-warn)" stroke-width="1.5" stroke-dasharray="3,3"/>`;
+  svg += `<circle cx="${selX}" cy="${selY}" r="6" fill="var(--amber-warn)" stroke="#fff" stroke-width="1.5"/>`;
+  svg += `<text x="${selX}" y="${padT-2}" text-anchor="middle" font-size="10" font-weight="700" fill="var(--amber-warn)">Seleccionado: ${selectedPct}%</text>`;
+  svg += `</svg>`;
+  svg += `<div style="text-align:center; font-size:13px; margin-top:6px;"><b>Margen de diferencia en ${selectedPct}%:</b> ${fmtMXN(gap)} · ${fmtUSD(gap/FX)}</div>`;
+  document.getElementById('compraChart').innerHTML = svg;
+}
+
+function exportCompra(){
+  let sumMateriales = 0, sumKgMateriales = 0;
+  const aoa = [["Compra / Purchase model"], [], ["Material","Costo MXN/kg","Cantidad kg","Total MXN","Total USD"]];
+  COMPRA_MATERIALES.forEach(l => {
+    const mat = CATALOGO[l.matIdx] || CATALOGO[0];
+    const tot = l.costo*l.cantidad; sumMateriales += tot; sumKgMateriales += l.cantidad;
+    aoa.push([mat.chem+' | '+mat.tipo, l.costo, l.cantidad, tot, +(tot/FX).toFixed(2)]);
+  });
+  const logistica = parseFloat(document.getElementById('compraLogistica').value) || 0;
+  const operativos = parseFloat(document.getElementById('compraOperativos').value) || 0;
+  const admin = parseFloat(document.getElementById('compraAdmin').value) || 0;
+  const subtotal = sumMateriales + logistica + operativos + admin;
+  const disposicionKg = parseFloat(document.getElementById('compraDisposicion').value) || 0;
+  const disposicionMonto = disposicionKg * sumKgMateriales;
+  const pct = parseFloat(document.getElementById('compraPct').value) || 0;
+  const ganancia = disposicionMonto*(pct/100);
+  const total = disposicionMonto+ganancia;
+  const margenReal = disposicionMonto - subtotal;
+  aoa.push([]);
+  aoa.push(["Gastos logísticos / Logistics", logistica]);
+  aoa.push(["Gastos operativos / Operating", operativos]);
+  aoa.push(["Gastos administrativos / Administrative", admin]);
+  aoa.push(["Subtotal de costos / Cost subtotal", subtotal, +(subtotal/FX).toFixed(2)]);
+  aoa.push([]);
+  aoa.push(["Kg totales (5 líneas) / Total kg", sumKgMateriales]);
+  aoa.push(["Precio de disposición final (MXN/kg) / Final disposal price", disposicionKg]);
+  aoa.push(["Monto de disposición (rate × kg) / Disposal amount", disposicionMonto, +(disposicionMonto/FX).toFixed(2)]);
+  aoa.push(["% de ganancia / Profit %", pct+'%']);
+  aoa.push(["Ganancia / Profit", ganancia, +(ganancia/FX).toFixed(2)]);
+  aoa.push(["TOTAL / TOTAL", total, +(total/FX).toFixed(2)]);
+  aoa.push(["Margen real / Real margin", margenReal, +(margenReal/FX).toFixed(2)]);
+  aoa.push(["% Margen real / Real margin %", disposicionMonto?((margenReal/disposicionMonto)*100).toFixed(1)+'%':'0%']);
+  downloadSheet('NIUNIU_Compra.xlsx', 'Compra', aoa);
+}
+
+// ---------- VENTA (mismo proceso que Compra, pero al reves) ----------
+let VENTA_MATERIALES = [
+  {matIdx:0, venta:0, cantidad:0},
+  {matIdx:0, venta:0, cantidad:0},
+  {matIdx:0, venta:0, cantidad:0},
+  {matIdx:0, venta:0, cantidad:0},
+  {matIdx:0, venta:0, cantidad:0},
+];
+
+function renderVentaMateriales(){
+  const body = document.getElementById('ventaMaterialesBody'); body.innerHTML = '';
+  let sumMXN = 0, sumKg = 0;
+  VENTA_MATERIALES.forEach((line, i) => {
+    const totMXN = line.venta * line.cantidad;
+    sumMXN += totMXN; sumKg += line.cantidad;
+    let options = CATALOGO.map((c,ci) => `<option value="${ci}" ${ci===line.matIdx?'selected':''}>${c.chem} | ${c.tipo}</option>`).join('');
+    body.innerHTML += `<tr>
+      <td class="input-cell"><select onchange="VENTA_MATERIALES[${i}].matIdx=parseInt(this.value);renderVentaMateriales();">${options}</select></td>
+      <td class="input-cell"><input type="number" step="0.01" value="${line.venta}" onchange="VENTA_MATERIALES[${i}].venta=parseFloat(this.value)||0;renderVentaMateriales();"></td>
+      <td class="input-cell"><input type="number" value="${line.cantidad}" onchange="VENTA_MATERIALES[${i}].cantidad=parseFloat(this.value)||0;renderVentaMateriales();"></td>
+      <td class="num">${fmtMXN(totMXN)}</td>
+      <td class="num usd-color">${fmtUSD(totMXN/FX)}</td>
+    </tr>`;
+  });
+  document.getElementById('ventaMaterialesTotal').innerHTML = `
+    <td>Subtotal de venta / Sale subtotal</td><td></td><td></td>
+    <td class="num">${fmtMXN(sumMXN)}</td><td class="num usd-color">${fmtUSD(sumMXN/FX)}</td>`;
+  calcVenta();
+}
+
+function calcVenta(){
+  let subtotalVenta = 0, sumKg = 0;
+  VENTA_MATERIALES.forEach(l => { subtotalVenta += l.venta * l.cantidad; sumKg += l.cantidad; });
+
+  const pct = parseFloat(document.getElementById('ventaPct').value) || 0;
+  const ganancia = subtotalVenta * (pct/100);
+  const total = subtotalVenta + ganancia;
+  const logistica = parseFloat(document.getElementById('ventaLogistica').value) || 0;
+  const operativos = parseFloat(document.getElementById('ventaOperativos').value) || 0;
+  const admin = parseFloat(document.getElementById('ventaAdmin').value) || 0;
+
+  let saldo = total;
+  const body = document.getElementById('ventaBody'); body.innerHTML = '';
+  body.innerHTML += `<tr><td>Subtotal de venta (5 líneas) / Sale subtotal</td><td class="num">${fmtMXN(subtotalVenta)}</td><td class="num usd-color">${spanUSD(subtotalVenta/FX)}</td></tr>`;
+  body.innerHTML += `<tr><td>(+) Ganancia (${pct}% s/subtotal) / Profit</td><td class="num">${fmtMXN(ganancia)}</td><td class="num usd-color">${spanUSD(ganancia/FX)}</td></tr>`;
+  body.innerHTML += `<tr class="total-row"><td>TOTAL / TOTAL</td><td class="num">${fmtMXN(total)}</td><td class="num">${spanUSD(total/FX)}</td></tr>`;
+  saldo -= logistica;
+  body.innerHTML += `<tr><td>(−) Gastos logísticos / Logistics costs</td><td class="num">-${fmtMXN(logistica)}</td><td class="num usd-color">-${fmtUSD(logistica/FX)}</td></tr>`;
+  saldo -= operativos;
+  body.innerHTML += `<tr><td>(−) Gastos operativos / Operating costs</td><td class="num">-${fmtMXN(operativos)}</td><td class="num usd-color">-${fmtUSD(operativos/FX)}</td></tr>`;
+  saldo -= admin;
+  body.innerHTML += `<tr><td>(−) Gastos administrativos / Administrative costs</td><td class="num">-${fmtMXN(admin)}</td><td class="num usd-color">-${fmtUSD(admin/FX)}</td></tr>`;
+  body.innerHTML += `<tr class="margin-row"><td>Saldo disponible para compra / Available for purchase</td><td class="num">${fmtMXN(saldo)}</td><td class="num">${spanUSD(saldo/FX)}</td></tr>`;
+  body.innerHTML += `<tr><td>÷ Cantidad total recolectada (5 líneas) / Total kg collected</td><td class="num">${fmtKg(sumKg)} kg</td><td></td></tr>`;
+
+  const costoResultanteMXN = sumKg > 0 ? saldo / sumKg : 0;
+  const costoResultanteUSD = costoResultanteMXN / FX;
+  body.innerHTML += `<tr class="total-row"><td>COSTO DE COMPRA RESULTANTE (MXN/kg) / RESULTING PURCHASE COST</td><td class="num">${fmtMXN(costoResultanteMXN)}/kg</td><td class="num">${spanUSD(costoResultanteUSD)}/kg</td></tr>`;
+
+  const resBody = document.getElementById('ventaResultadoBody'); resBody.innerHTML = '';
+  VENTA_MATERIALES.forEach(l => {
+    const mat = CATALOGO[l.matIdx] || CATALOGO[0];
+    resBody.innerHTML += `<tr>
+      <td>${mat.chem} | ${mat.tipo}</td>
+      <td class="num">${fmtKg(l.cantidad)}</td>
+      <td class="num">${fmtMXN(costoResultanteMXN)}</td>
+      <td class="num usd-color">${spanUSD(costoResultanteUSD)}</td>
+    </tr>`;
+  });
+}
+
+function exportVenta(){
+  let subtotalVenta = 0, sumKg = 0;
+  const aoa = [["Venta / Sale model"], [], ["Material","Venta $/kg","Cantidad kg","Total MXN","Total USD"]];
+  VENTA_MATERIALES.forEach(l => {
+    const mat = CATALOGO[l.matIdx] || CATALOGO[0];
+    const tot = l.venta*l.cantidad; subtotalVenta += tot; sumKg += l.cantidad;
+    aoa.push([mat.chem+' | '+mat.tipo, l.venta, l.cantidad, tot, +(tot/FX).toFixed(2)]);
+  });
+  const pct = parseFloat(document.getElementById('ventaPct').value) || 0;
+  const ganancia = subtotalVenta*(pct/100);
+  const total = subtotalVenta+ganancia;
+  const logistica = parseFloat(document.getElementById('ventaLogistica').value) || 0;
+  const operativos = parseFloat(document.getElementById('ventaOperativos').value) || 0;
+  const admin = parseFloat(document.getElementById('ventaAdmin').value) || 0;
+  const saldo = total - logistica - operativos - admin;
+  const costoResultanteMXN = sumKg > 0 ? saldo/sumKg : 0;
+  aoa.push([]);
+  aoa.push(["Subtotal de venta / Sale subtotal", subtotalVenta, +(subtotalVenta/FX).toFixed(2)]);
+  aoa.push(["% de ganancia / Profit %", pct+'%']);
+  aoa.push(["(+) Ganancia / Profit", ganancia, +(ganancia/FX).toFixed(2)]);
+  aoa.push(["TOTAL / TOTAL", total, +(total/FX).toFixed(2)]);
+  aoa.push(["(-) Gastos logísticos / Logistics costs", logistica]);
+  aoa.push(["(-) Gastos operativos / Operating costs", operativos]);
+  aoa.push(["(-) Gastos administrativos / Administrative costs", admin]);
+  aoa.push(["Saldo disponible para compra / Available for purchase", saldo, +(saldo/FX).toFixed(2)]);
+  aoa.push(["÷ Cantidad total recolectada (kg) / Total kg collected", sumKg]);
+  aoa.push(["COSTO DE COMPRA RESULTANTE (MXN/kg) / RESULTING PURCHASE COST", costoResultanteMXN, +(costoResultanteMXN/FX).toFixed(4)]);
+  downloadSheet('NIUNIU_Venta.xlsx', 'Venta', aoa);
+}
+
+function recalcAll(){ renderPricing(); renderCatalogo(); renderBitacora(); calcExport(); calcDistancia(); calcAcopio(); renderCompra(); renderVentaMateriales(); }
+recalcAll();
+</script>
+</body>
+</html>
